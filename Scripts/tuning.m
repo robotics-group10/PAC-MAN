@@ -49,10 +49,10 @@ trajectories = {
     @(t) [t, sin(t)];                                               % X-linear sine wave
     @(t) [cos(t), t];                                               % Y-linear sine wave
     @(t) [ t, 2*tanh(t-5) ];                                        % Step/Lane change trajectory
-    @(t) [t, 2*(t>5)];                                              % Pure Step
+    @(t) [t, 2*(t>5)];                                              % PureStep
 };
 
-t_sim = linspace(0,10,500);
+t_sim = linspace(0,10,1000);
 
 cost_tracking = @(simOut) tracking_cost(simOut);
 

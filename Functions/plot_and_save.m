@@ -56,7 +56,7 @@ function plot_and_save(simOut, figure_name, figures_folder, goal)
     legend(legend_entries);
 
     % Set the figure title
-    title(figure_name);
+    title(strrep(figure_name,'_',' '), 'Interpreter', 'none');
 
     % Save the figure as PNG in the specified folder
     saveas(h, fullfile(figures_folder, [figure_name, '.png']));
