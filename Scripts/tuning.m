@@ -1,11 +1,11 @@
-%% PAC-MAN CONTROLLER TUNING SCRIPT (TRACKING+PARKING)
+%% PAC-MAN CONTROLLER TUNING SCRIPT (TRACKING + REGULATION)
 clear; clc; close all;
 
-%% ----- PATH SETUP -----
-% '..' means "go up one folder", then enter 'Simulink'
+%% PATH SETUP
+
+% Simulink folder
 simulink_folder = fullfile('..', 'Simulink');
 
-% Add folder to MATLAB path to access .slx files
 if exist(simulink_folder, 'dir')
     addpath(simulink_folder);
 else
@@ -20,7 +20,7 @@ model_reg      = 'cartesian_regulation_crl';
 load_system(model_tracking);
 load_system(model_reg);
 
-% Figures folder (up one level, then 'Figures')
+% Figures folder
 figures_folder = fullfile('..', 'Figures');
 
 % Clean existing folder for new results
@@ -38,11 +38,12 @@ else
     error('Functions folder not found!');
 end
 
-%% ----- TRAJECTORY TRACKING CONFIGURATION -----
+%% TRAJECTORY TRACKING CONFIGURATION
+%PARAMETERS
 eps_vals = [0.2 0.5 0.8];
 a_vals   = [5 10 15];
 
-% Define multiple trajectories (anonymous functions)
+% Define multiple trajectories
 trajectories = {
     @(t) [2*cos(t), 2*sin(t)];                                      % Circle
     @(t) [t, sin(t)];                                               % X-linear sine wave
@@ -66,7 +67,7 @@ for k = 1:length(trajectories)
     dx = gradient(x_d) ./ dt;
     dy = gradient(y_d) ./ dt;
     
-    % Smoothing
+    % Smoothing od gradient to decrease noise
     dx = smoothdata(dx,'movmean',5);
     dy = smoothdata(dy,'movmean',5);
 
@@ -74,6 +75,9 @@ for k = 1:length(trajectories)
     theta_d = atan2(dy + 1e-12, dx + 1e-12);
     
     % Create q_d_new = [time, x, y, theta] for "From Workspace"
+    
+    % TODO if the manual switch are dismissed in simulink files, q_d_new 
+    % can be replace with q_d
     q_d_new = [t, x_d, y_d, theta_d];
     assignin('base','q_d_new', q_d_new);
     
@@ -99,7 +103,8 @@ for k = 1:length(trajectories)
     
 end
 
-%% ----- CARTESIAN REGULATION (PARKING) CONFIGURATION -----
+%% CARTESIAN REGULATION (PARKING) CONFIGURATION
+%PARAMETERS
 kv_vals = [0.5 1 2];
 kw_vals = [2 5 7];
 
@@ -110,7 +115,7 @@ goals = [1 1; 3 3; 2 5; 0 4];
 for k = 1:size(goals,1)
     current_goal = goals(k,:);
     
-    % Create q_goal for "From Workspace" (time 0 → 100s)
+    % Create q_goal for "From Workspace"
     q_goal_simulink = [0, current_goal(1), current_goal(2); 
                        100, current_goal(1), current_goal(2)];
     assignin('base', 'q_goal', q_goal_simulink);
