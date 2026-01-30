@@ -13,7 +13,7 @@ else
 end
 
 % Model names (without extension)
-model_tracking = 'trajectory_tracking_crl';
+model_tracking = 'trajectory_tracking_linearized_crl';
 model_reg      = 'cartesian_regulation_crl';
 
 % Load models without opening GUI
@@ -49,7 +49,7 @@ trajectories = {
     @(t) [t, sin(t)];                                               % X-linear sine wave
     @(t) [cos(t), t];                                               % Y-linear sine wave
     @(t) [ t, 2*tanh(t-5) ];                                        % Step/Lane change trajectory
-    @(t) [t, 2*(t>5)];                                              % PureStep
+    %@(t) [t, 2*(t>5)];                                              % PureStep (not twice differentiable, but can be tried with output error controller if implemented)
 };
 
 t_sim = linspace(0,10,1000);
@@ -74,13 +74,18 @@ for k = 1:length(trajectories)
     % Epsilon to avoid atan2(0,0)
     theta_d = atan2(dy + 1e-12, dx + 1e-12);
     
-    % Create q_d_new = [time, x, y, theta] for "From Workspace"
+    % Created q_d_new = [time, x, y, theta] for "From Workspace"
     
     % TODO if the manual switch are dismissed in simulink files, q_d_new 
     % can be replace with q_d
+
     q_d_new = [t, x_d, y_d, theta_d];
     assignin('base','q_d_new', q_d_new);
     
+    % Created q0 = [x, y, theta] as initial state of unicycle model
+    q0 = [x_d(1); y_d(1); theta_d(1)];
+    assignin('base','q0', q0);
+
     fprintf('\n=== Tuning Trajectory %d ===\n', k);
     
     % Run grid search over a and eps
@@ -109,7 +114,7 @@ kv_vals = [0.5 1 2];
 kw_vals = [2 5 7];
 
 % Define goals [x, y]
-goals = [1 1; 3 3; 2 5; 0 4];
+goals = [1 1; 3 3; 2 5; 15 20];
 
 %% Loop over goals
 for k = 1:size(goals,1)
