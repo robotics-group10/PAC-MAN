@@ -42,9 +42,9 @@ t_path = (1:length(x_path))';
 x_spline = spline(t_path, x_path);
 y_spline = spline(t_path, y_path);
 T_stop = t_path(end);
-t_sim = linspace(t_path(1), T_stop, 5*length(x_path))';
-x_d = ppval(x_spline, t_sim);
-y_d = ppval(y_spline, t_sim);
+t_sim = linspace(t_path(1), T_stop, 2*length(x_path))'; % meno punti per step più grandi
+x_d = pchip(t_path, x_path, t_sim);
+y_d = pchip(t_path, y_path, t_sim);
 
 % Forza il punto finale esattamente sul goal
 x_d(end) = x_path(end);
@@ -53,6 +53,19 @@ y_d(end) = y_path(end);
 dx = gradient(x_d, t_sim(2)-t_sim(1));
 dy = gradient(y_d, t_sim(2)-t_sim(1));
 theta_d = atan2(dy, dx);
+
+% ================================
+% INTEGRA IL FERMO DEL ROBOT
+% ================================
+num_stop = 2;  % numero di punti finali da fermare
+if num_stop > length(x_d)
+    num_stop = length(x_d);
+end
+
+% Mantieni posizione e orientamento costanti negli ultimi punti
+x_d(end-num_stop+1:end) = x_d(end);
+y_d(end-num_stop+1:end) = y_d(end);
+theta_d(end-num_stop+1:end) = theta_d(end);
 
 q_d_new = [t_sim, x_d(:), y_d(:), theta_d(:)];
 q0 = [x_d(1); y_d(1); theta_d(1)];
