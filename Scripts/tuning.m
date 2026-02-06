@@ -14,11 +14,14 @@ end
 
 % Model names (without extension)
 model_tracking = 'trajectory_tracking_linearized_crl';
-model_reg      = 'cartesian_regulation_crl';
+model_reg_cart = 'cartesian_regulation_crl';
+model_reg_post = 'posture_regulation';
 
 % Load models without opening GUI
 load_system(model_tracking);
-load_system(model_reg);
+load_system(model_reg_cart);
+load_system(model_reg_post);
+
 
 % Figures folder
 figures_folder = fullfile('..', 'Figures');
@@ -45,68 +48,18 @@ a_vals   = [5 10 15];
 
 % Define multiple trajectories
 trajectories = {
-    @(t) [2*cos(t), 2*sin(t)];                                      % Circle
-    @(t) [t, sin(t)];                                               % X-linear sine wave
-    @(t) [cos(t), t];                                               % Y-linear sine wave
-    @(t) [ t, 2*tanh(t-5) ];                                        % Step/Lane change trajectory
-    %@(t) [t, 2*(t>5)];                                              % PureStep (not twice differentiable, but can be tried with output error controller if implemented)
+    @(t) [2*cos(t), 2*sin(t)];  % Circle
+    @(t) [t, sin(t)];           % X-linear sine wave
+    @(t) [cos(t), t];           % Y-linear sine wave
+    @(t) [ t, 2*tanh(t-5) ];    % Step/Lane change trajectory
+    %@(t) [t, 2*(t>5)];         % PureStep (not twice differentiable, but can be tried with output error controller if implemented)
 };
 
+% Simulation time
 t_sim = linspace(0,10,1000);
 
-cost_tracking = @(simOut) tracking_cost(simOut);
-
-%% Loop over trajectories
-for k = 1:length(trajectories)
-    % Generate trajectory
-    t = t_sim(:);
-    xy = trajectories{k}(t);
-    
-    x_d = xy(:,1); y_d = xy(:,2);
-    dt = gradient(t);
-    dx = gradient(x_d) ./ dt;
-    dy = gradient(y_d) ./ dt;
-    
-    % Smoothing od gradient to decrease noise
-    dx = smoothdata(dx,'movmean',5);
-    dy = smoothdata(dy,'movmean',5);
-
-    % Epsilon to avoid atan2(0,0)
-    theta_d = atan2(dy + 1e-12, dx + 1e-12);
-    
-    % Created q_d_new = [time, x, y, theta] for "From Workspace"
-    
-    % TODO if the manual switch are dismissed in simulink files, q_d_new 
-    % can be replace with q_d
-
-    q_d_new = [t, x_d, y_d, theta_d];
-    assignin('base','q_d_new', q_d_new);
-    
-    % Created q0 = [x, y, theta] as initial state of unicycle model
-    q0 = [x_d(1); y_d(1); theta_d(1)];
-    assignin('base','q0', q0);
-
-    fprintf('\n=== Tuning Trajectory %d ===\n', k);
-    
-    % Run grid search over a and eps
-    [best_tracking_params, best_tracking_err, results_tracking] = ...
-        grid_search(model_tracking, {'eps','a'}, {eps_vals, a_vals}, cost_tracking);
-    
-    fprintf('Trajectory %d -> eps=%.2f, a=%.2f | RMS=%.4f\n', ...
-        k, best_tracking_params(1), best_tracking_params(2), best_tracking_err);
-    
-    % Re-run simulation with optimal parameters and plot
-    param_names_tracking = {'eps','a'};
-    for i = 1:length(best_tracking_params)
-        set_param([model_tracking '/' param_names_tracking{i}], ... 
-            'Value', num2str(best_tracking_params(i)));
-    end
-    
-    set_param(model_tracking, 'SimulationCommand', 'update');
-    simOut = sim(model_tracking,'ReturnWorkspaceOutputs','on');
-    plot_and_save(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
-    
-end
+% Tune controller
+tuning_trajectory_tracking(model_tracking, trajectories, t_sim, eps_vals, a_vals, figures_folder)
 
 %% CARTESIAN REGULATION (PARKING) CONFIGURATION
 %PARAMETERS
@@ -116,34 +69,13 @@ kw_vals = [2 5 7];
 % Define goals [x, y]
 goals = [1 1; 3 3; 2 5; 15 20];
 
-%% Loop over goals
-for k = 1:size(goals,1)
-    current_goal = goals(k,:);
-    
-    % Create q_goal for "From Workspace"
-    q_goal_simulink = [0, current_goal(1), current_goal(2); 
-                       100, current_goal(1), current_goal(2)];
-    assignin('base', 'q_goal', q_goal_simulink);
-    
-    cost_parking = @(simOut) parking_cost(simOut, current_goal(1), current_goal(2));
-    
-    fprintf('\n=== Tuning Parking Goal [%.1f, %.1f] ===\n', current_goal(1), current_goal(2));
-    
-    % Grid search over Kv, Kw
-    [best_parking_params, best_parking_err, results_parking] = ...
-        grid_search(model_reg, {'kv','kw'}, {kv_vals, kw_vals}, cost_parking);
-    
-    fprintf('Goal [%.1f, %.1f] -> Kv=%.2f, Kw=%.2f | Err=%.4f\n', ...
-        current_goal(1), current_goal(2), best_parking_params(1), best_parking_params(2), best_parking_err);
-    
-    % Re-run simulation with optimal parameters and plot
-    param_names_parking = {'kv','kw'};
-    for i = 1:length(best_parking_params)
-        set_param([model_reg '/' param_names_parking{i}], 'Value', num2str(best_parking_params(i)));
-    end
-    
-    set_param(model_reg, 'SimulationCommand', 'update');
-    simOut = sim(model_reg, 'ReturnWorkspaceOutputs', 'on');
-    plot_and_save(simOut, sprintf('Parking_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
-  
-end
+% Tune controller
+tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
+
+%% CARTESIAN POSTURE (PARKING) CONFIGURATION
+k1_vals = [0.5 1 2];
+k2_vals = [2 5];
+k3_vals = [0.5 1];
+
+% Tune controller
+tuning_posture_regulation(model_reg_post, goals, k1_vals, k2_vals, k3_vals, figures_folder)
