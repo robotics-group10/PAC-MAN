@@ -1,52 +1,89 @@
 %% ================================
-% LABIRINTO CASUALE MA DETERMINISTICO CON TRAIETTORIA AUTOMATICA
+% DETERMINISTIC RANDOM MAZE WITH AUTOMATIC TRAJECTORY
 % ================================
 clear; close all; clc;
 
-%% PARAMETRI LABIRINTO
-nrows = 31;       
-ncols = 31;       
-room_size = 7;    
+%% Add Simulink folder to path
+simulink_folder = fullfile('..', 'Simulink');
+if exist(simulink_folder, 'dir')
+    addpath(simulink_folder);
+else
+    error('Simulink folder not found! Check the path.');
+end
 
-%% INIZIALIZZA RNG PER LABIRINTO FISSO
+%% Add Functions folder to path
+functions_folder = fullfile('..','Functions');
+if exist(functions_folder,'dir')
+    addpath(functions_folder);
+else
+    error('Functions folder not found!');
+end
+
+%% ================================
+% MAZE PARAMETERS
+%% ================================
+nrows = 31;       % Number of maze rows (must be odd)
+ncols = 31;       % Number of maze columns (must be odd)
+room_size = 7;    % Size of the central empty room
+
+%% Initialize RNG for deterministic maze generation
 rng(1234);
 
-%% GENERA LABIRINTO CASUALE
+%% Generate random maze
 maze = generateMaze(nrows,ncols);
 
-%% Aggiungi stanza centrale vuota
+%% Create empty central room
 center_r = ceil(nrows/2);
 center_c = ceil(ncols/2);
 half = floor(room_size/2);
-r1 = center_r - half; r2 = center_r + half;
-c1 = center_c - half; c2 = center_c + half;
+
+r1 = center_r - half;
+r2 = center_r + half;
+c1 = center_c - half;
+c2 = center_c + half;
+
 maze(r1:r2, c1:c2) = 0;
 
-%% PUNTO DI PARTENZA E DI ARRIVO
-startPos = [1, 15];        % [riga, colonna]
-goalPos  = [center_r, center_c];  % centro stanza centrale
+%% ================================
+% START AND GOAL DEFINITIONS
+%% ================================
+startPos = [1, 15];
 
-%% TROVA PERCORSO LIBERO (BFS)
-path = bfs_path(maze, startPos, goalPos);
+% Tracking ends at the entrance of the central room
+goalPos_tracking   = [r1, center_c];
+
+% Regulation target is the center of the room
+goalPos_regulation = [center_r, center_c];
+
+%% ================================
+% PATH PLANNING USING BFS
+%% ================================
+path = bfs_path(maze, startPos, goalPos_tracking);
 
 if isempty(path)
-    error('Non esiste percorso dal punto di partenza al goal!');
+    error('No collision-free path found from start to goal.');
 end
 
-%% CONVERSIONE CELLE -> COORDINATE REALI
+%% ================================
+% CELL COORDINATES → REAL COORDINATES
+%% ================================
 x_path = path(:,2) - 0.5;
 y_path = nrows - path(:,1) + 0.5;
 t_path = (1:length(x_path))';
 
-%% INTERPOLAZIONE TRAIETTORIA
+%% ================================
+% TRAJECTORY INTERPOLATION
+%% ================================
 x_spline = spline(t_path, x_path);
 y_spline = spline(t_path, y_path);
+
 T_stop = t_path(end);
-t_sim = linspace(t_path(1), T_stop, 2*length(x_path))'; % meno punti per step più grandi
+t_sim = linspace(t_path(1), T_stop, 2*length(x_path))';
+
 x_d = pchip(t_path, x_path, t_sim);
 y_d = pchip(t_path, y_path, t_sim);
 
-% Forza il punto finale esattamente sul goal
+% Force final point exactly on the tracking goal
 x_d(end) = x_path(end);
 y_d(end) = y_path(end);
 
@@ -54,136 +91,165 @@ dx = gradient(x_d, t_sim(2)-t_sim(1));
 dy = gradient(y_d, t_sim(2)-t_sim(1));
 theta_d = atan2(dy, dx);
 
-% ================================
-% INTEGRA IL FERMO DEL ROBOT
-% ================================
-num_stop = 2;  % numero di punti finali da fermare
-if num_stop > length(x_d)
-    num_stop = length(x_d);
-end
+%% ================================
+% ROBOT STOP AT END OF TRAJECTORY
+%% ================================
+num_stop = 2;   % Number of final points with zero motion
+num_stop = min(num_stop, length(x_d));
 
-% Mantieni posizione e orientamento costanti negli ultimi punti
 x_d(end-num_stop+1:end) = x_d(end);
 y_d(end-num_stop+1:end) = y_d(end);
 theta_d(end-num_stop+1:end) = theta_d(end);
 
 q_d_new = [t_sim, x_d(:), y_d(:), theta_d(:)];
 q0 = [x_d(1); y_d(1); theta_d(1)];
+
 assignin('base','q_d_new', q_d_new);
 assignin('base','q0', q0);
-fprintf('Traiettoria pronta per Simulink: %d punti\n', length(t_sim));
+
+fprintf('Trajectory ready for Simulink: %d points\n', length(t_sim));
+
+disp('--- TRACKING SETUP ---')
+disp(['q0 (tracking) = [', num2str(q0.'), ']'])
+disp(['Tracking end  = [', num2str([x_d(end), y_d(end), theta_d(end)]), ']'])
 
 %% ================================
-% SIMULAZIONE CONTROLLORO
+% TRACKING CONTROLLER SIMULATION
 %% ================================
 model_tracking = 'trajectory_tracking_linearized_crl';
+
 if exist([model_tracking,'.slx'], 'file')
     load_system(model_tracking);
     set_param(model_tracking,'SimulationCommand','update');
     simOut = sim(model_tracking,'ReturnWorkspaceOutputs','on');
-    disp('Simulazione completata con successo.');
+    disp('Tracking simulation completed successfully.');
 else
-    warning('Modello %s non trovato.', model_tracking);
+    warning('Model %s not found.', model_tracking);
 end
 
-%% SALVATAGGIO FIGURE
+%% ================================
+% REGULATION (POST-TRAJECTORY)
+%% ================================
+model_reg = 'cartesian_regulation_crl';
+
+if exist([model_reg,'.slx'],'file')
+    load_system(model_reg);
+else
+    warning('Model %s not found.', model_reg);
+end
+
+q0_reg = [x_d(end); y_d(end); theta_d(end)];
+assignin('base','q0_reg', q0_reg);
+
+% Regulation goal in real-world coordinates
+x_goal = goalPos_regulation(2) - 0.5;
+y_goal = nrows - goalPos_regulation(1) + 0.5;
+theta_goal = 0;   % Orientation (ignored if regulator is position-only)
+
+T_reg = 5;  % Regulation duration [s]
+
+q_goal = [ ...
+    0,      x_goal, y_goal;
+    T_reg, x_goal, y_goal
+];
+
+assignin('base','q_goal', q_goal);
+
+num_reg_points = 50;
+t_reg = linspace(0, T_reg, num_reg_points)';
+
+disp('--- REGULATION SETUP ---')
+disp(['q0_reg    = [', num2str(q0_reg.'), ']'])
+disp(['q_goal xy = [', num2str(x_goal), ', ', num2str(y_goal), ']'])
+
+simOut_reg = sim(model_reg,'ReturnWorkspaceOutputs','on');
+disp('Regulation simulation completed successfully.');
+
+%% ================================
+% SAVE FIGURES
+%% ================================
 figures_folder = fullfile(pwd,'figures');
 if ~exist(figures_folder,'dir')
     mkdir(figures_folder);
 end
-goal_real = [goalPos(2)-0.5, nrows-goalPos(1)+0.5];
-plot_and_save(simOut, 'trajectory_unicycle', figures_folder, goal_real);
+x_goal_tracking = goalPos_tracking(2) - 0.5;
+y_goal_tracking = nrows - goalPos_tracking(1) + 0.5;
+goal_tracking = [x_goal_tracking,y_goal_tracking];
+goal_regulation = [x_goal, y_goal];
+plot_and_save(simOut, 'trajectory_unicycle', figures_folder, goal_tracking);
+plot_and_save(simOut_reg, 'regulation_unicycle', figures_folder, goal_regulation);
 
-%% VISUALIZZAZIONE LABIRINTO E TRAIETTORIA
-figure('Color','w'); hold on; axis equal tight;
-scale = 2; set(gca,'Color','w');
+%% ================================
+% EXTRACT TRAJECTORIES FOR PLOTTING
+%% ================================
+
+% ---- TRACKING ----
+q_tr    = simOut.logsout.getElement('q').Values.Data;   % actual
+if ismember('q_d', simOut.logsout.getElementNames)
+    q_d_tr = simOut.logsout.getElement('q_d').Values.Data; % desired
+else
+    q_d_tr = [];
+end
+
+% ---- REGULATION ----
+q_reg    = simOut_reg.logsout.getElement('q').Values.Data;   % actual
+if ismember('q_d', simOut_reg.logsout.getElementNames)
+    q_d_reg = simOut_reg.logsout.getElement('q_d').Values.Data; % desired
+else
+    q_d_reg = [];
+end
+
+%% ================================
+% SINGLE FINAL PLOT: MAZE + TRAJECTORIES
+%% ================================
+figure('Color','w'); % figure background white
+hold on; axis equal tight;
+scale = 2;
+
+ax = gca;             % get current axes
+ax.Color = 'w';       % set axes (background) to white
+
+% ---- Draw maze walls ----
 for r = 1:nrows
     for c = 1:ncols
-        if maze(r,c) == 1
+        if maze(r,c)==1
             rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
-                      'FaceColor','k', 'EdgeColor','none');
+                      'FaceColor','k', 'EdgeColor','none'); % walls black
         end
     end
 end
-plot(x_d*scale, y_d*scale, 'r', 'LineWidth',2);
-plot(x_d(1)*scale, y_d(1)*scale, 'go', 'MarkerFaceColor','g', 'MarkerSize',8);
-plot(x_d(end)*scale, y_d(end)*scale, 'ro', 'MarkerFaceColor','r', 'MarkerSize',8);
+
+% ---- Central room ----
 rectangle('Position', [(c1-1)*scale, (nrows-r2)*scale, room_size*scale, room_size*scale], ...
-          'EdgeColor','r','LineWidth',2);
+          'EdgeColor','k','LineWidth',2,'LineStyle','--'); % dashed room outline
+
+% ---- TRACKING ----
+if ~isempty(q_d_tr)
+    plot(q_d_tr(:,1)*scale, q_d_tr(:,2)*scale, 'r--', 'LineWidth',1.8); % desired
+end
+plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'r', 'LineWidth',2.5); % actual
+
+% ---- REGULATION ----
+if ~isempty(q_d_reg)
+    plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'b--', 'LineWidth',1.8); % desired
+end
+plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'b', 'LineWidth',2.5); % actual
+
+% ---- Start & regulation goal ----
+plot(x_d(1)*scale, y_d(1)*scale, 'go', 'MarkerFaceColor','g', 'MarkerSize',8); % start
+plot(x_goal*scale, y_goal*scale, 'mo', 'MarkerFaceColor','m', 'MarkerSize',8); % goal
+
 xlabel('X'); ylabel('Y');
-title('Labirinto con Traiettoria Automatica Non Collidente');
-grid off;
+title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)');
 axis([0 ncols*scale 0 nrows*scale]);
 
-%% ================================
-% FUNZIONE GENERAZIONE LABIRINTO
-%% ================================
-function maze = generateMaze(nrows,ncols)
-    if mod(nrows,2)==0 || mod(ncols,2)==0
-        error('nrows e ncols devono essere dispari.');
-    end
-    maze = ones(nrows,ncols);
-    visited = false((nrows+1)/2, (ncols+1)/2);
-    stack = [1,1]; visited(1,1)=true; maze(1,1)=0;
-    dirs=[-1 0;1 0;0 -1;0 1];
-    while ~isempty(stack)
-        cur=stack(end,:); r=cur(1); c=cur(2);
-        mazeR=2*r-1; mazeC=2*c-1; nbrs=[];
-        for k=1:4
-            nr=r+dirs(k,1); nc=c+dirs(k,2);
-            if nr>=1 && nr<=size(visited,1) && nc>=1 && nc<=size(visited,2) && ~visited(nr,nc)
-                nbrs(end+1,:)=[nr nc];
-            end
-        end
-        if isempty(nbrs)
-            stack(end,:)=[];
-        else
-            next=nbrs(randi(size(nbrs,1)),:);
-            midR=mazeR+(next(1)-r); midC=mazeC+(next(2)-c);
-            maze(mazeR,mazeC)=0; maze(midR,midC)=0;
-            maze(2*next(1)-1,2*next(2)-1)=0;
-            visited(next(1),next(2))=true;
-            stack=[stack; next];
-        end
-    end
-end
+legend({ ...
+    'Tracking desired', ...
+    'Tracking actual', ...
+    'Regulation desired', ...
+    'Regulation actual', ...
+    'Start', ...
+    'Regulation goal'}, ...
+    'Location','best');
 
-%% ================================
-% FUNZIONE BFS PATHFINDING
-%% ================================
-function path = bfs_path(maze, startPos, goalPos)
-    nrows=size(maze,1); ncols=size(maze,2);
-    visited=false(nrows,ncols);
-    parent = zeros(nrows,ncols,2);
-    queue = startPos;
-    visited(startPos(1), startPos(2))=true;
-    dirs=[-1 0;1 0;0 -1;0 1];
-    found=false;
-    
-    while ~isempty(queue)
-        cur=queue(1,:); queue(1,:)=[];
-        if isequal(cur, goalPos)
-            found=true; break;
-        end
-        for k=1:4
-            nr=cur(1)+dirs(k,1); nc=cur(2)+dirs(k,2);
-            if nr>=1 && nr<=nrows && nc>=1 && nc<=ncols && maze(nr,nc)==0 && ~visited(nr,nc)
-                queue(end+1,:)=[nr nc];
-                visited(nr,nc)=true;
-                parent(nr,nc,:) = cur;
-            end
-        end
-    end
-    
-    if ~found
-        path=[];
-        return;
-    end
-    
-    % ricostruisci path
-    path=goalPos;
-    while ~isequal(path(1,:), startPos)
-        p = squeeze(parent(path(1,1), path(1,2),:))';
-        path=[p; path];
-    end
-end
+grid off;
