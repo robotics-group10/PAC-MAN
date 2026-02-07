@@ -74,22 +74,29 @@ t_path = (1:length(x_path))';
 %% ================================
 % TRAJECTORY INTERPOLATION
 %% ================================
-x_spline = spline(t_path, x_path);
-y_spline = spline(t_path, y_path);
 
-T_stop = t_path(end);
-t_sim = linspace(t_path(1), T_stop, 2*length(x_path))';
+% Numero di punti di interpolazione (smoothness)
+interp_factor = 1;                 % 5–10–20
+N_sim = interp_factor * length(x_path);
 
-x_d = pchip(t_path, x_path, t_sim);
-y_d = pchip(t_path, y_path, t_sim);
+% Parametro (indice, minimal change)
+t_sim = linspace(t_path(1), t_path(end), N_sim)';
 
-% Force final point exactly on the tracking goal
+% Interpolazione spline
+x_d = interp1(t_path, x_path, t_sim, 'spline');
+y_d = interp1(t_path, y_path, t_sim, 'spline');
+
+% Forza ultimo punto
 x_d(end) = x_path(end);
 y_d(end) = y_path(end);
 
-dx = gradient(x_d, t_sim(2)-t_sim(1));
-dy = gradient(y_d, t_sim(2)-t_sim(1));
+% Orientazione smooth
+dt = t_sim(2) - t_sim(1);
+dx = gradient(x_d, dt);
+dy = gradient(y_d, dt);
+
 theta_d = atan2(dy, dx);
+theta_d = unwrap(theta_d);
 
 %% ================================
 % ROBOT STOP AT END OF TRAJECTORY
