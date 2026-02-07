@@ -76,7 +76,7 @@ t_path = (1:length(x_path))';
 %% ================================
 
 % Numero di punti di interpolazione (smoothness)
-interp_factor = 1;                 % 5–10–20
+interp_factor = 10;                 % 5–10–20
 N_sim = interp_factor * length(x_path);
 
 % Parametro (indice, minimal change)
