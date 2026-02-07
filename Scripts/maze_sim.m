@@ -168,7 +168,7 @@ disp('Regulation simulation completed successfully.');
 %% ================================
 % SAVE FIGURES
 %% ================================
-figures_folder = fullfile(pwd,'figures');
+figures_folder = fullfile(pwd,'Figures');
 if ~exist(figures_folder,'dir')
     mkdir(figures_folder);
 end
