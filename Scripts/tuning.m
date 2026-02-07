@@ -13,7 +13,7 @@ else
 end
 
 % Model names (without extension)
-model_tracking = 'trajectory_tracking_linearized_crl';
+model_tracking = 'traj_track_state_error_linearization_ctrl';
 model_reg_cart = 'cartesian_regulation_crl';
 model_reg_post = 'posture_regulation';
 

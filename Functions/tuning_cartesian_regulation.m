@@ -8,6 +8,10 @@ for k = 1:size(goals,1)
     q_goal_simulink = [0, current_goal(1), current_goal(2); 
                        100, current_goal(1), current_goal(2)];
     assignin('base', 'q_goal', q_goal_simulink);
+
+    % Set initial pose for regulation
+    q0_reg = [0; 0; 0];  % replace with actual start position if needed
+    assignin('base', 'q0_reg', q0_reg);
     
     cost_parking = @(simOut) parking_cost(simOut, current_goal(1), current_goal(2));
     
