@@ -73,9 +73,9 @@ goals = [1 1; 3 3; 2 5; 15 20];
 tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
 
 %% CARTESIAN POSTURE (PARKING) CONFIGURATION
-k1_vals = [0.5 1 2];
-k2_vals = [2 5];
-k3_vals = [0.5 1];
+k1_vals = [1 1.5 2];
+k2_vals = [1 1.5 2];
+k3_vals = [1 1.5 2];
 
 % Tune controller
 tuning_posture_regulation(model_reg_post, goals, k1_vals, k2_vals, k3_vals, figures_folder)
