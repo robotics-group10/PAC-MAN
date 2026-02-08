@@ -1,4 +1,4 @@
-function tuning_trajectory_tracking(model_tracking, trajectories, t_sim, eps_vals, a_vals, figures_folder)
+function tuning_trajectory_tracking_linear(model_tracking, trajectories, t_sim, eps_vals, a_vals, figures_folder)
 
 % Define cost function
 cost_tracking = @(simOut) tracking_cost(simOut);

@@ -13,14 +13,16 @@ else
 end
 
 % Model names (without extension)
-model_tracking = 'traj_track_state_error_linearization_ctrl';
-%model_tracking = 'traj_track_state_error_nonlinear_ctlr';
-%model_tracking = 'traj_track_output_error_feedback_ctrl';
+model_tracking_linear= 'traj_track_state_error_linearization_ctrl';
+model_tracking_nonlinear = 'traj_track_state_error_nonlinear_ctlr';
+model_tracking_output = 'traj_track_output_error_feedback_ctrl';
 model_reg_cart = 'cartesian_regulation_ctrl';
 model_reg_post = 'posture_regulation_ctrl';
 
 % Load models without opening GUI
-load_system(model_tracking);
+load_system(model_tracking_linear);
+load_system(model_tracking_nonlinear);
+load_system(model_tracking_output);
 load_system(model_reg_cart);
 load_system(model_reg_post);
 
@@ -43,11 +45,8 @@ else
     error('Functions folder not found!');
 end
 
-%% TRAJECTORY TRACKING CONFIGURATION
-%PARAMETERS
-eps_vals = [0.2 0.5 0.8];
-a_vals   = [5 10 15];
-
+% Simulation time
+t_sim = linspace(0,10,1000);
 % Define multiple trajectories
 trajectories = {
     @(t) [2*cos(t), 2*sin(t)];  % Circle
@@ -57,11 +56,23 @@ trajectories = {
     %@(t) [t, 2*(t>5)];         % PureStep (not twice differentiable, but can be tried with output error controller if implemented)
 };
 
-% Simulation time
-t_sim = linspace(0,10,1000);
+%% TRAJECTORY TRACKING LINEARIZED CONFIGURATION
+%PARAMETERS
+eps_vals = [0.2 0.5 0.8];
+a_vals   = [5 10 15];
 
 % Tune controller
-tuning_trajectory_tracking(model_tracking, trajectories, t_sim, eps_vals, a_vals, figures_folder)
+%tuning_trajectory_tracking_linear(model_tracking_linear, trajectories, t_sim, eps_vals, a_vals, figures_folder)
+
+
+%% TRAJECTORY TRACKING NONLINEAR CONFIGURATION
+
+%PARAMETERS
+b_vals = [0.2 0.5 0.8];
+xi_vals   = [5 10 15];
+
+% Tune controller
+tuning_trajectory_tracking_nonlinear(model_tracking_nonlinear, trajectories, t_sim, b_vals, xi_vals, figures_folder)
 
 %% CARTESIAN REGULATION (PARKING) CONFIGURATION
 %PARAMETERS
@@ -72,7 +83,7 @@ kw_vals = [2 5 7];
 goals = [1 1; 3 3; 2 5; 15 20];
 
 % Tune controller
-tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
+%tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
 
 %% CARTESIAN POSTURE (PARKING) CONFIGURATION
 k1_vals = [1 1.5 2];
@@ -80,4 +91,4 @@ k2_vals = [1 1.5 2];
 k3_vals = [1 1.5 2];
 
 % Tune controller
-tuning_posture_regulation(model_reg_post, goals, k1_vals, k2_vals, k3_vals, figures_folder)
+%tuning_posture_regulation(model_reg_post, goals, k1_vals, k2_vals, k3_vals, figures_folder)
