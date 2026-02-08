@@ -272,5 +272,3 @@ legend(h, labels, 'Location','best');
 
 grid off;
 
-disp(size(q_reg))        % dimensioni di q_reg
-disp(q_reg(1:5,:))      % primi 5 punti
