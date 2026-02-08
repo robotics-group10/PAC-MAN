@@ -137,7 +137,7 @@ end
 %% ================================
 % REGULATION (POST-TRAJECTORY)
 %% ================================
-model_reg = 'cartesian_regulation_crl';
+model_reg = 'posture_regulation';
 
 if exist([model_reg,'.slx'],'file')
     load_system(model_reg);
