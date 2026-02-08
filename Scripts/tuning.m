@@ -72,18 +72,48 @@ b_vals = [0.2 0.5 0.8];
 xi_vals   = [5 10 15];
 
 % Tune controller
-tuning_trajectory_tracking_nonlinear(model_tracking_nonlinear, trajectories, t_sim, b_vals, xi_vals, figures_folder)
+%tuning_trajectory_tracking_nonlinear(model_tracking_nonlinear, trajectories, t_sim, b_vals, xi_vals, figures_folder)
 
 %% CARTESIAN REGULATION (PARKING) CONFIGURATION
 %PARAMETERS
-kv_vals = [0.5 1 2];
-kw_vals = [2 5 7];
-
+%kv_vals = [0.5 1 2];
+%kw_vals = [2 5 7];
+kv_vals = [0.5 1];
+kw_vals = [4 6];
 % Define goals [x, y]
-goals = [1 1; 3 3; 2 5; 15 20];
+goals = [
+    % Near
+    0.2   0.2
+    0.5   0.3
+   -0.3   0.4
+
+    % Medium
+    1     2
+    2     1
+   -2     3
+    3    -2
+
+    % Far
+    10    5
+   -8    12
+    15   20
+   -20  -15
+
+    % Axes
+    5     0
+   -5     0
+    0     5
+    0    -5
+
+    % Epsilon
+    1e-3  0
+    0     1e-3
+    1e-3  1e-3
+];
+
 
 % Tune controller
-%tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
+tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
 
 %% CARTESIAN POSTURE (PARKING) CONFIGURATION
 k1_vals = [1 1.5 2];
