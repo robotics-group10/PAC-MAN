@@ -277,39 +277,37 @@ grid off;
 
 %% Video Generation
 %% ================================
-% VIDEO GENERATION
+% VIDEO GENERATION (VARIABLE SPEED)
 %% ================================
 
-% Create video directory
+% Create video directory and writer
 video_folder = fullfile(pwd,'Video');
 if ~exist(video_folder,'dir')
     mkdir(video_folder);
 end
 
-% Create VideoWriter object
 video_filename = fullfile(video_folder, 'pacman_trajectory.mp4');
 v = VideoWriter(video_filename, 'MPEG-4');
 v.FrameRate = 30; 
 v.Quality = 100;
 open(v);
 
-% Set black background
+% Setup figure
 f = figure('Color','k', 'Position', [100, 100, 800, 800]); 
 scale = 2;
 
-% Setup Axes (white text)
+% Setup axes
 ax = gca;
-ax.Color = 'k';         % Black axes background
-ax.XColor = 'w';        % White X-axis text
-ax.YColor = 'w';        % White Y-axis text
+ax.Color = 'k';         
+ax.XColor = 'w';        
+ax.YColor = 'w';        
 ax.LineWidth = 1.5;
 hold on; axis equal tight;
-
 xlabel('X [m]'); ylabel('Y [m]');
 title('Pacman Project - Unicycle Trajectory', 'Color', 'w');
 axis([0 ncols*scale 0 nrows*scale]);
 
-% Draw maze walls
+% Draw Maze Walls
 for r = 1:nrows
     for c = 1:ncols
         if maze(r,c) == 1
@@ -319,59 +317,81 @@ for r = 1:nrows
     end
 end
 
-if exist('q_tr', 'var') && exist('q_reg', 'var')
-    if size(q_tr,2) == size(q_reg,2)
-        full_traj = [q_tr; q_reg];
-    else
-        full_traj = [q_tr(:,1:3); q_reg(:,1:3)]; 
-    end
-elseif exist('q_tr', 'var')
-    full_traj = q_tr;
-else
-    full_traj = q_reg;
-end
-
-% Path Line: White
+% Initialize plot objects
 h_path = plot(nan, nan, 'w-', 'LineWidth', 1.5); 
-
-% Robot Triangle: Yellow
 h_robot = patch('XData', [], 'YData', [], 'FaceColor', 'y', 'EdgeColor', 'none'); 
 
-% Animation Loop
-step_size = 5; % Skip frames for speed (adjust as needed)
-
-% Define Triangle Shape
+% Triangle geometry
 tri_size = 0.6 * scale; 
-% Vertices: [Tip, Back-Left, Back-Right]
 base_tri = [ 1.0,  0.0; 
             -0.5,  0.6; 
             -0.5, -0.6 ] * tri_size;
 
 disp('Generating video...');
 
-for i = 1:step_size:size(full_traj, 1)
-    x_curr     = full_traj(i, 1) * scale;
-    y_curr     = full_traj(i, 2) * scale;
-    theta_curr = full_traj(i, 3);
+% First generate trajectory
+step_tracking = 5; % bigger => faster
+
+% Initialize history containers
+path_x_history = [];
+path_y_history = [];
+
+if exist('q_tr', 'var') && ~isempty(q_tr)
+    N_tr = size(q_tr, 1);
     
-    set(h_path, 'XData', full_traj(1:i, 1)*scale, ...
-                'YData', full_traj(1:i, 2)*scale);
+    for i = 1:step_tracking:N_tr
+        % Current state
+        x = q_tr(i, 1) * scale;
+        y = q_tr(i, 2) * scale;
+        th = q_tr(i, 3);
+        
+        % Update path
+        current_path_x = q_tr(1:i, 1) * scale;
+        current_path_y = q_tr(1:i, 2) * scale;
+        set(h_path, 'XData', current_path_x, 'YData', current_path_y);
+        
+        % Update robot
+        R = [cos(th), -sin(th); sin(th), cos(th)];
+        tri = (R * base_tri')';
+        set(h_robot, 'XData', tri(:,1)+x, 'YData', tri(:,2)+y);
+        
+        writeVideo(v, getframe(f));
+    end
     
-    % Rotate and translate triangle
-    R = [cos(theta_curr), -sin(theta_curr); 
-         sin(theta_curr),  cos(theta_curr)];
-     
-    rotated_tri = (R * base_tri')'; % Rotate
-    
-    % Update robot position
-    set(h_robot, 'XData', rotated_tri(:,1) + x_curr, ...
-                 'YData', rotated_tri(:,2) + y_curr);
-    
-    % Capture Frame
-    frame = getframe(f);
-    writeVideo(v, frame);
+    % Store the final full path of tracking to keep it on screen later
+    path_x_history = q_tr(:, 1) * scale;
+    path_y_history = q_tr(:, 2) * scale;
 end
 
-% Close the video
+% Now generate regulation
+step_regulation = 1; % don't skip frames
+
+if exist('q_reg', 'var') && ~isempty(q_reg)
+    N_reg = size(q_reg, 1);
+    
+    for i = 1:step_regulation:N_reg
+        % Current state
+        x = q_reg(i, 1) * scale;
+        y = q_reg(i, 2) * scale;
+        th = q_reg(i, 3);
+        
+        % Update path: concatenate history + current regulation path
+        curr_reg_x = q_reg(1:i, 1) * scale;
+        curr_reg_y = q_reg(1:i, 2) * scale;
+        
+        set(h_path, 'XData', [path_x_history; curr_reg_x], ...
+                    'YData', [path_y_history; curr_reg_y]);
+        
+        % Update robot triangle
+        R = [cos(th), -sin(th); sin(th), cos(th)];
+        tri = (R * base_tri')';
+        set(h_robot, 'XData', tri(:,1)+x, 'YData', tri(:,2)+y);
+        
+        writeVideo(v, getframe(f));
+    end
+end
+
+% Close everything
 close(v);
-disp('Video saved.');
+close(f);
+disp(['Video saved to: ', video_filename]);
