@@ -250,13 +250,37 @@ xlabel('X'); ylabel('Y');
 title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)');
 axis([0 ncols*scale 0 nrows*scale]);
 
-legend({ ...
-    'Tracking desired', ...
-    'Tracking actual', ...
-    'Regulation desired', ...
-    'Regulation actual', ...
-    'Start', ...
-    'Regulation goal'}, ...
-    'Location','best');
+% DYNAMIC LEGEND
+h = [];
+labels = {};
+
+% ---- TRACKING ----
+if ~isempty(q_d_tr)
+    h(end+1) = plot(q_d_tr(:,1)*scale, q_d_tr(:,2)*scale, 'r--', 'LineWidth',1.8);
+    labels{end+1} = 'Tracking desired';
+end
+
+h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'r', 'LineWidth',2.5);
+labels{end+1} = 'Tracking actual';
+
+% ---- REGULATION ----
+if ~isempty(q_d_reg)
+    h(end+1) = plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'b--', 'LineWidth',1.8);
+    labels{end+1} = 'Regulation desired';
+end
+
+h(end+1) = plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'b', 'LineWidth',2.5);
+labels{end+1} = 'Regulation actual';
+
+% ---- START & GOAL ----
+h(end+1) = plot(x_d(1)*scale, y_d(1)*scale, 'go', ...
+    'MarkerFaceColor','g', 'MarkerSize',8);
+labels{end+1} = 'Start';
+
+h(end+1) = plot(x_goal*scale, y_goal*scale, 'mo', ...
+    'MarkerFaceColor','m', 'MarkerSize',8);
+labels{end+1} = 'Regulation goal';
+
+legend(h, labels, 'Location','best');
 
 grid off;
