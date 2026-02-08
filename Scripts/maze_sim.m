@@ -76,7 +76,7 @@ t_path = (1:length(x_path))';
 %% ================================
 
 % Numero di punti di interpolazione (smoothness)
-interp_factor = 10;                 % 5–10–20
+interp_factor = 100;                 % 5–10–20
 N_sim = interp_factor * length(x_path);
 
 % Parametro (indice, minimal change)
@@ -139,8 +139,8 @@ end
 %% ================================
 % REGULATION (POST-TRAJECTORY)
 %% ================================
-model_reg = 'cartesian_regulation_ctrl';
-%model_reg = 'posture_regulation_ctrl';
+%model_reg = 'cartesian_regulation_ctrl';
+model_reg = 'posture_regulation_ctrl';
 
 if exist([model_reg,'.slx'],'file')
     load_system(model_reg);
@@ -165,7 +165,7 @@ q_goal = [ ...
 
 assignin('base','q_goal', q_goal);
 
-num_reg_points = 50;
+num_reg_points = 500;
 t_reg = linspace(0, T_reg, num_reg_points)';
 
 disp('--- REGULATION SETUP ---')
@@ -275,3 +275,103 @@ legend(h, labels, 'Location','best');
 
 grid off;
 
+%% Video Generation
+%% ================================
+% VIDEO GENERATION
+%% ================================
+
+% Create video directory
+video_folder = fullfile(pwd,'Video');
+if ~exist(video_folder,'dir')
+    mkdir(video_folder);
+end
+
+% Create VideoWriter object
+video_filename = fullfile(video_folder, 'pacman_trajectory.mp4');
+v = VideoWriter(video_filename, 'MPEG-4');
+v.FrameRate = 30; 
+v.Quality = 100;
+open(v);
+
+% Set black background
+f = figure('Color','k', 'Position', [100, 100, 800, 800]); 
+scale = 2;
+
+% Setup Axes (white text)
+ax = gca;
+ax.Color = 'k';         % Black axes background
+ax.XColor = 'w';        % White X-axis text
+ax.YColor = 'w';        % White Y-axis text
+ax.LineWidth = 1.5;
+hold on; axis equal tight;
+
+xlabel('X [m]'); ylabel('Y [m]');
+title('Pacman Project - Unicycle Trajectory', 'Color', 'w');
+axis([0 ncols*scale 0 nrows*scale]);
+
+% Draw maze walls
+for r = 1:nrows
+    for c = 1:ncols
+        if maze(r,c) == 1
+            rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
+                      'FaceColor', 'b', 'EdgeColor', 'b'); 
+        end
+    end
+end
+
+if exist('q_tr', 'var') && exist('q_reg', 'var')
+    if size(q_tr,2) == size(q_reg,2)
+        full_traj = [q_tr; q_reg];
+    else
+        full_traj = [q_tr(:,1:3); q_reg(:,1:3)]; 
+    end
+elseif exist('q_tr', 'var')
+    full_traj = q_tr;
+else
+    full_traj = q_reg;
+end
+
+% Path Line: White
+h_path = plot(nan, nan, 'w-', 'LineWidth', 1.5); 
+
+% Robot Triangle: Yellow
+h_robot = patch('XData', [], 'YData', [], 'FaceColor', 'y', 'EdgeColor', 'none'); 
+
+% Animation Loop
+step_size = 5; % Skip frames for speed (adjust as needed)
+
+% Define Triangle Shape
+tri_size = 0.6 * scale; 
+% Vertices: [Tip, Back-Left, Back-Right]
+base_tri = [ 1.0,  0.0; 
+            -0.5,  0.6; 
+            -0.5, -0.6 ] * tri_size;
+
+disp('Generating video...');
+
+for i = 1:step_size:size(full_traj, 1)
+    x_curr     = full_traj(i, 1) * scale;
+    y_curr     = full_traj(i, 2) * scale;
+    theta_curr = full_traj(i, 3);
+    
+    set(h_path, 'XData', full_traj(1:i, 1)*scale, ...
+                'YData', full_traj(1:i, 2)*scale);
+    
+    % Rotate and translate triangle
+    R = [cos(theta_curr), -sin(theta_curr); 
+         sin(theta_curr),  cos(theta_curr)];
+     
+    rotated_tri = (R * base_tri')'; % Rotate
+    
+    % Update robot position
+    set(h_robot, 'XData', rotated_tri(:,1) + x_curr, ...
+                 'YData', rotated_tri(:,2) + y_curr);
+    
+    % Capture Frame
+    frame = getframe(f);
+    writeVideo(v, frame);
+end
+
+% Close the video
+close(v);
+disp('Video saved.');
