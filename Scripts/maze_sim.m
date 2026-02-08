@@ -230,22 +230,6 @@ end
 rectangle('Position', [(c1-1)*scale, (nrows-r2)*scale, room_size*scale, room_size*scale], ...
           'EdgeColor','k','LineWidth',2,'LineStyle','--'); % dashed room outline
 
-% ---- TRACKING ----
-if ~isempty(q_d_tr)
-    plot(q_d_tr(:,1)*scale, q_d_tr(:,2)*scale, 'r--', 'LineWidth',1.8); % desired
-end
-plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'r', 'LineWidth',2.5); % actual
-
-% ---- REGULATION ----
-if ~isempty(q_d_reg)
-    plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'b--', 'LineWidth',1.8); % desired
-end
-plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'b', 'LineWidth',2.5); % actual
-
-% ---- Start & regulation goal ----
-plot(x_d(1)*scale, y_d(1)*scale, 'go', 'MarkerFaceColor','g', 'MarkerSize',8); % start
-plot(x_goal*scale, y_goal*scale, 'mo', 'MarkerFaceColor','m', 'MarkerSize',8); % goal
-
 xlabel('X'); ylabel('Y');
 title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)');
 axis([0 ncols*scale 0 nrows*scale]);
