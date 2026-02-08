@@ -13,7 +13,8 @@ y = q(:,2);
 % Euclidean distance to the goal at each time instant
 rho = sqrt((x - x_goal).^2 + (y - y_goal).^2);
 
-% Cost: integral of the squared distance over time
-err = trapz(t, rho.^2)/ norm([x_goal,y_goal]);;
+% Cost: integral of the squared distance over time the normalized by
+% initial Eucledian distance
+err = trapz(t, rho.^2)/ norm([x_goal,y_goal]);
 end
 
