@@ -75,11 +75,17 @@ xi_vals   = [5 10 15];
 %tuning_trajectory_tracking_nonlinear(model_tracking_nonlinear, trajectories, t_sim, b_vals, xi_vals, figures_folder)
 
 %% CARTESIAN REGULATION (PARKING) CONFIGURATION
+
 %PARAMETERS
-%kv_vals = [0.5 1 2];
-%kw_vals = [2 5 7];
-kv_vals = [0.5 1];
-kw_vals = [4 6];
+
+% Best: Kv=1.00, Kw=6.00 +STABLE -> FOR LONG DISTANCES
+%kv_vals = [0.5 1];
+%%kw_vals = [4 6];
+
+% Best: Kv=2.00, Kw=8.00 +SPEED -> BETTER IN GENERAL 
+kv_vals = [1 2];
+kw_vals = [6 8];
+
 % Define goals [x, y]
 goals = [
     % Near
