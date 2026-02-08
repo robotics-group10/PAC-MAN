@@ -14,6 +14,6 @@ y = q(:,2);
 rho = sqrt((x - x_goal).^2 + (y - y_goal).^2);
 
 % Cost: integral of the squared distance over time
-err = trapz(t, rho.^2);
+err = trapz(t, rho.^2)/ norm([x_goal,y_goal]);;
 end
 
