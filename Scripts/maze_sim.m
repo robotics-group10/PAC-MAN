@@ -50,7 +50,7 @@ maze(r1:r2, c1:c2) = 0;
 startPos = [1, 15];
 
 % Tracking ends at the entrance of the central room
-goalPos_tracking   = [r1, center_c];
+goalPos_tracking   = [r1, center_c-3];
 
 % Regulation target is the center of the room
 goalPos_regulation = [center_r, center_c];
@@ -153,7 +153,7 @@ x_goal = goalPos_regulation(2) - 0.5;
 y_goal = nrows - goalPos_regulation(1) + 0.5;
 theta_goal = 0;   % Orientation (ignored if regulator is position-only)
 
-T_reg = 5;  % Regulation duration [s]
+T_reg = 100;  % Regulation duration [s]
 
 q_goal = [ ...
     0,      x_goal, y_goal;
@@ -200,6 +200,7 @@ end
 
 % ---- REGULATION ----
 q_reg    = simOut_reg.logsout.getElement('q').Values.Data;   % actual
+
 if ismember('q_d', simOut_reg.logsout.getElementNames)
     q_d_reg = simOut_reg.logsout.getElement('q_d').Values.Data; % desired
 else
@@ -248,6 +249,7 @@ h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'r', 'LineWidth',2.5);
 labels{end+1} = 'Tracking actual';
 
 % ---- REGULATION ----
+
 if ~isempty(q_d_reg)
     h(end+1) = plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'b--', 'LineWidth',1.8);
     labels{end+1} = 'Regulation desired';
@@ -255,6 +257,7 @@ end
 
 h(end+1) = plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'b', 'LineWidth',2.5);
 labels{end+1} = 'Regulation actual';
+
 
 % ---- START & GOAL ----
 h(end+1) = plot(x_d(1)*scale, y_d(1)*scale, 'go', ...
@@ -268,3 +271,6 @@ labels{end+1} = 'Regulation goal';
 legend(h, labels, 'Location','best');
 
 grid off;
+
+disp(size(q_reg))        % dimensioni di q_reg
+disp(q_reg(1:5,:))      % primi 5 punti
