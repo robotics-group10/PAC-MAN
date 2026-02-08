@@ -14,8 +14,10 @@ end
 
 % Model names (without extension)
 model_tracking = 'traj_track_state_error_linearization_ctrl';
-model_reg_cart = 'cartesian_regulation_crl';
-model_reg_post = 'posture_regulation';
+%model_tracking = 'traj_track_state_error_nonlinear_ctlr';
+%model_tracking = 'traj_track_output_error_feedback_ctrl';
+model_reg_cart = 'cartesian_regulation_ctrl';
+model_reg_post = 'posture_regulation_ctrl';
 
 % Load models without opening GUI
 load_system(model_tracking);
