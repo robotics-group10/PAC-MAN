@@ -238,6 +238,18 @@ xlabel('X'); ylabel('Y');
 title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)');
 axis([0 ncols*scale 0 nrows*scale]);
 
+% ---- PARKING BOX ----
+park_width  = 1.2 * scale;   % along x
+park_height = 1.2 * scale;   % along y
+park_x = x_goal*scale - park_width/2;
+park_y = y_goal*scale - park_height/2;
+rectangle('Position', [park_x, park_y, park_width, park_height], ...
+          'EdgeColor', [0 1 0], ...
+          'LineWidth', 2.5, ...
+          'LineStyle', '-');
+
+plot(x_goal*scale, y_goal*scale, 'gx', 'MarkerSize', 12, 'LineWidth', 2);
+
 % DYNAMIC LEGEND
 h = [];
 labels = {};
@@ -316,6 +328,11 @@ for r = 1:nrows
         end
     end
 end
+% ---- PARKING BOX ----
+rectangle('Position', [park_x, park_y, park_width, park_height], ...
+          'EdgeColor', 'g', ...
+          'LineWidth', 2, ...
+          'LineStyle', '--');
 
 % Initialize plot objects
 h_path = plot(nan, nan, 'w-', 'LineWidth', 1.5); 
