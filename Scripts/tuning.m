@@ -114,12 +114,66 @@ goals = [
 
 
 % Tune controller
-tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
+%tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
 
 %% CARTESIAN POSTURE (PARKING) CONFIGURATION
-k1_vals = [1 1.5 2];
-k2_vals = [1 1.5 2];
-k3_vals = [1 1.5 2];
+small_k = 2;
+big_k = 8;
+
+num_k = 3;
+k_range = linspace(small_k, big_k, num_k);
+
+k1_vals = k_range;
+k2_vals = k_range;
+k3_vals = k_range;
+
+% Define goals [x, y]
+posture_goals = [
+
+    % Axes
+    %5     0
+
+    % Near
+    %0.2   0.2
+    0.5   0.3
+
+    % Medium
+    %1     2
+    2     1
+
+    % Far
+    %10    5
+    15   20
+
+];
 
 % Tune controller
-%tuning_posture_regulation(model_reg_post, goals, k1_vals, k2_vals, k3_vals, figures_folder)
+[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
+
+big_k_1 = k_optimal(1) + 1;
+big_k_2 = k_optimal(2) + 1;
+big_k_3 = k_optimal(3) + 1;
+
+small_k_1 = k_optimal(1) - 1;
+small_k_2 = k_optimal(2) - 1;
+small_k_3 = k_optimal(3) - 1;
+
+k1_vals = linspace(small_k_1, big_k_1, num_k);
+k2_vals = linspace(small_k_2, big_k_2, num_k);
+k3_vals = linspace(small_k_3, big_k_3, num_k);
+
+[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
+
+big_k_1 = k_optimal(1) + 0.5;
+big_k_2 = k_optimal(2) + 0.5;
+big_k_3 = k_optimal(3) + 0.5;
+
+small_k_1 = k_optimal(1) - 0.5;
+small_k_2 = k_optimal(2) - 0.5;
+small_k_3 = k_optimal(3) - 0.5;
+
+k1_vals = linspace(small_k_1, big_k_1, num_k);
+k2_vals = linspace(small_k_2, big_k_2, num_k);
+k3_vals = linspace(small_k_3, big_k_3, num_k);
+
+[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
