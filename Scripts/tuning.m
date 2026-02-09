@@ -15,6 +15,7 @@ end
 % Model names (without extension)
 model_tracking_linear= 'traj_track_state_error_linearization_ctrl';
 model_tracking_nonlinear = 'traj_track_state_error_nonlinear_ctlr';
+model_tracking_output_error_feedback = 'traj_track_output_error_feedback_ctrl';
 model_tracking_output = 'traj_track_output_error_feedback_ctrl';
 model_reg_cart = 'cartesian_regulation_ctrl';
 model_reg_post = 'posture_regulation_ctrl';
@@ -56,19 +57,19 @@ trajectories = {
     %@(t) [t, 2*(t>5)];         % PureStep (not twice differentiable, but can be tried with output error controller if implemented)
 };
 
-%% TRAJECTORY TRACKING LINEARIZED CONFIGURATION
+%% TRAJECTORY TRACKING LINEARIZED CONFIGURATION (#1)
 %PARAMETERS
 
 % Best: eps = 0.9, a = 30
 
 eps_vals = [0.2 0.5 0.8];
-a_vals   = [5 10 15];
+%a_vals   = [5 10 15];
 
 % Tune controller
 %tuning_trajectory_tracking_linear(model_tracking_linear, trajectories, t_sim, eps_vals, a_vals, figures_folder)
 
 
-%% TRAJECTORY TRACKING NONLINEAR CONFIGURATION
+%% TRAJECTORY TRACKING NONLINEAR CONFIGURATION (#2)
 
 %PARAMETERS
 b_vals = [0.2 0.5 0.8];
@@ -76,6 +77,17 @@ xi_vals   = [5 10 15];
 
 % Tune controller
 %tuning_trajectory_tracking_nonlinear(model_tracking_nonlinear, trajectories, t_sim, b_vals, xi_vals, figures_folder)
+
+%% TRAJECTORY TRACKING OUTPUT ERROR FEEDBACK (#3)
+
+%PARAMETERS
+a_vals = [0.2 0.5 0.8];
+kp1_vals = [5 10 15];
+kp2_vals = [5 10 15];
+
+% Tune controller
+tuning_trajectory_tracking_output_error_feedback(model_tracking_output_error_feedback, trajectories, t_sim , a_vals, kp1_vals, kp2_vals, figures_folder)
+
 
 %% CARTESIAN REGULATION (PARKING) CONFIGURATION
 
@@ -121,7 +133,7 @@ goals = [
 
 
 % Tune controller
-tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
+%tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
 
 %% CARTESIAN POSTURE (PARKING) CONFIGURATION
 k1_vals = [1 1.5 2];
