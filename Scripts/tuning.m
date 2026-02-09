@@ -80,11 +80,15 @@ xi_vals   = [5 10 15];
 
 % Best: Kv=1.00, Kw=6.00 +STABLE -> FOR LONG DISTANCES
 %kv_vals = [0.5 1];
-%%kw_vals = [4 6];
+%kw_vals = [4 6];
 
 % Best: Kv=2.00, Kw=8.00 +SPEED -> BETTER IN GENERAL 
-kv_vals = [1 2];
-kw_vals = [6 8];
+%kv_vals = [1 2];
+%kw_vals = [6 8];
+
+% Best: Kv=3.00, Kw=9.00 
+kv_vals = [0.5 1 1.5 2 2.5 3];
+kw_vals = [3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9];
 
 % Define goals [x, y]
 goals = [
