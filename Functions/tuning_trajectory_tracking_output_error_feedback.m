@@ -1,4 +1,4 @@
-function tuning_trajectory_tracking_nonlinear(model_tracking, trajectories, t_sim, b_vals, xi_vals, figures_folder)
+function tuning_trajectory_tracking_output_error_feedback(model_tracking, trajectories, t_sim, a_vals, kp1_vals,kp2_vals, figures_folder)
 % Tuning controller parameters for trajectory tracking
 % model_tracking: Simulink model name
 % trajectories: cell array of trajectory functions @(t) -> [x,y]
@@ -7,7 +7,7 @@ function tuning_trajectory_tracking_nonlinear(model_tracking, trajectories, t_si
 % figures_folder: folder to save plots
 
 % Define cost function
-cost_tracking = @(simOut) tracking_cost(simOut);
+cost_tracking = @(simOut) tracking_cost_out_err(simOut);
 
 %% Loop over trajectories
 for k = 1:length(trajectories)
@@ -39,15 +39,15 @@ for k = 1:length(trajectories)
 
     fprintf('\n=== Tuning Trajectory %d ===\n', k);
     
-    % Grid search over b and xi
+    % Grid search over a (distance from com) and gains kp1, kp2
     [best_tracking_params, best_tracking_err, results_tracking] = ...
-        grid_search(model_tracking, {'b', 'xi'}, {b_vals, xi_vals}, cost_tracking);
+        grid_search(model_tracking, {'a', 'kp1', 'kp2'}, {a_vals, kp1_vals, kp2_vals}, cost_tracking);
     
-    fprintf('Trajectory %d -> b=%.2f, xi=%.2f | RMS=%.4f\n', ...
-        k, best_tracking_params(1), best_tracking_params(2), best_tracking_err);
+    fprintf('Trajectory %d -> a=%.2f, kp1=%.2f, kp2=%.2f | RMS=%.4f\n', ...
+        k, best_tracking_params(1), best_tracking_params(2), best_tracking_params(3), best_tracking_err);
     
     % Update Simulink parameters with optimal values
-    param_names_tracking = {'b','xi'};
+    param_names_tracking = {'a','kp1', 'kp2'};
     for i = 1:length(best_tracking_params)
         set_param([model_tracking '/' param_names_tracking{i}], ...
             'Value', num2str(best_tracking_params(i)));
@@ -58,6 +58,6 @@ for k = 1:length(trajectories)
     simOut = sim(model_tracking, 'ReturnWorkspaceOutputs', 'on');
     
     % Plot and save results
-    plot_and_save(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
+    plot_and_save_2(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
 end
 end
