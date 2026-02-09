@@ -7,7 +7,7 @@ function tuning_trajectory_tracking_output_error_feedback(model_tracking, trajec
 % figures_folder: folder to save plots
 
 % Define cost function
-cost_tracking = @(simOut) tracking_cost_out_err(simOut);
+cost_tracking = @(simOut) tracking_cost(simOut);
 
 %% Loop over trajectories
 for k = 1:length(trajectories)
@@ -58,6 +58,6 @@ for k = 1:length(trajectories)
     simOut = sim(model_tracking, 'ReturnWorkspaceOutputs', 'on');
     
     % Plot and save results
-    plot_and_save_2(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
+    plot_and_save(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
 end
 end
