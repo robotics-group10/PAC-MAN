@@ -40,3 +40,7 @@ codegen/
 
 # Macos things
 .DS_Store
+
+
+*.mp4
+*.png
