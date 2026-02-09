@@ -58,6 +58,9 @@ trajectories = {
 
 %% TRAJECTORY TRACKING LINEARIZED CONFIGURATION
 %PARAMETERS
+
+% Best: eps = 0.9, a = 30
+
 eps_vals = [0.2 0.5 0.8];
 a_vals   = [5 10 15];
 
