@@ -16,14 +16,13 @@ end
 model_tracking_linear= 'traj_track_state_error_linearization_ctrl';
 model_tracking_nonlinear = 'traj_track_state_error_nonlinear_ctlr';
 model_tracking_output_error_feedback = 'traj_track_output_error_feedback_ctrl';
-model_tracking_output = 'traj_track_output_error_feedback_ctrl';
 model_reg_cart = 'cartesian_regulation_ctrl';
 model_reg_post = 'posture_regulation_ctrl';
 
 % Load models without opening GUI
 load_system(model_tracking_linear);
 load_system(model_tracking_nonlinear);
-load_system(model_tracking_output);
+load_system(model_tracking_output_error_feedback);
 load_system(model_reg_cart);
 load_system(model_reg_post);
 
