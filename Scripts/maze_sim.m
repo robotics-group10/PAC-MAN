@@ -218,21 +218,27 @@ hold on; axis equal tight;
 scale = 2;
 
 ax = gca;             % get current axes
-ax.Color = 'w';       % set axes (background) to white
+ax.Color  = 'k';
+ax.XColor = 'w';
+ax.YColor = 'w';
+ax.LineWidth = 1.5;
 
 % ---- Draw maze walls ----
 for r = 1:nrows
     for c = 1:ncols
         if maze(r,c)==1
             rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
-                      'FaceColor','k', 'EdgeColor','none'); % walls black
+                      'FaceColor','b', 'EdgeColor','b'); % walls black
         end
     end
 end
 
 % ---- Central room ----
 rectangle('Position', [(c1-1)*scale, (nrows-r2)*scale, room_size*scale, room_size*scale], ...
-          'EdgeColor','k','LineWidth',2,'LineStyle','--'); % dashed room outline
+          'EdgeColor','w', ...
+          'LineWidth',2, ...
+          'LineStyle','--');
+
 
 xlabel('X'); ylabel('Y');
 title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)');
@@ -260,7 +266,7 @@ if ~isempty(q_d_tr)
     labels{end+1} = 'Tracking desired';
 end
 
-h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'r', 'LineWidth',2.5);
+h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'w', 'LineWidth',2);
 labels{end+1} = 'Tracking actual';
 
 % ---- REGULATION ----
@@ -270,7 +276,7 @@ if ~isempty(q_d_reg)
     labels{end+1} = 'Regulation desired';
 end
 
-h(end+1) = plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'b', 'LineWidth',2.5);
+h(end+1) = plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'w', 'LineWidth',2);
 labels{end+1} = 'Regulation actual';
 
 
@@ -332,7 +338,7 @@ end
 rectangle('Position', [park_x, park_y, park_width, park_height], ...
           'EdgeColor', 'g', ...
           'LineWidth', 2, ...
-          'LineStyle', '--');
+          'LineStyle', '-');
 
 % Initialize plot objects
 h_path = plot(nan, nan, 'w-', 'LineWidth', 1.5); 
