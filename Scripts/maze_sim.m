@@ -129,7 +129,7 @@ model_tracking = 'traj_track_state_error_linearization_ctrl';
 
 if exist([model_tracking,'.slx'], 'file')
     load_system(model_tracking);
-    set_param(model_tracking,'SimulationCommand','update');
+    set_param(model_tracking,'SimulationCommand','update','StopTime', '45');
     simOut = sim(model_tracking,'ReturnWorkspaceOutputs','on');
     disp('Tracking simulation completed successfully.');
 else
@@ -172,7 +172,7 @@ disp('--- REGULATION SETUP ---')
 disp(['q0_reg    = [', num2str(q0_reg.'), ']'])
 disp(['q_goal xy = [', num2str(x_goal), ', ', num2str(y_goal), ']'])
 
-simOut_reg = sim(model_reg,'ReturnWorkspaceOutputs','on');
+simOut_reg = sim(model_reg,'ReturnWorkspaceOutputs','on','StopTime', '35');
 disp('Regulation simulation completed successfully.');
 
 %% ================================
