@@ -46,15 +46,49 @@ else
 end
 
 % Simulation time
-t_sim = linspace(0,10,1000);
+t_sim = linspace(0,10,100000);
+%t_sim = linspace(0,10,1000);
+
 % Define multiple trajectories
 trajectories = {
-    @(t) [2*cos(t), 2*sin(t)];  % Circle
-    @(t) [t, sin(t)];           % X-linear sine wave
-    @(t) [cos(t), t];           % Y-linear sine wave
-    @(t) [ t, 2*tanh(t-5) ];    % Step/Lane change trajectory
-    %@(t) [t, 2*(t>5)];         % PureStep (not twice differentiable, but can be tried with output error controller if implemented)
+    %@(t) [2*cos(t), 2*sin(t)];  % Circle
+    %@(t) [t, sin(t)];           % X-linear sine wave
+    %@(t) [cos(t), t];           % Y-linear sine wave
+    %@(t) [ t, 2*tanh(t-5) ];    % Step/Lane change trajectory
+    %@(t) [t, 2*(t>5)];         % PureStep
+    @(t) squareTrajectory(t, 2);
 };
+function p = squareTrajectory(t, L)
+
+    T = 4*L;
+    tau = mod(t, T);
+
+    x = zeros(size(t));
+    y = zeros(size(t));
+
+    % Lato 1
+    idx = tau < L;
+    x(idx) = tau(idx);
+    y(idx) = 0;
+
+    % Lato 2
+    idx = tau >= L & tau < 2*L;
+    x(idx) = L;
+    y(idx) = tau(idx) - L;
+
+    % Lato 3
+    idx = tau >= 2*L & tau < 3*L;
+    x(idx) = 3*L - tau(idx);
+    y(idx) = L;
+
+    % Lato 4
+    idx = tau >= 3*L;
+    x(idx) = 0;
+    y(idx) = 4*L - tau(idx);
+
+    p = [x(:), y(:)];
+end
+
 
 %% TRAJECTORY TRACKING LINEARIZED CONFIGURATION (#1)
 %PARAMETERS
@@ -209,3 +243,5 @@ k2_vals = linspace(small_k_2, big_k_2, num_k);
 k3_vals = linspace(small_k_3, big_k_3, num_k);
 
 [k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
+
+

@@ -129,7 +129,8 @@ model_tracking = 'traj_track_state_error_linearization_ctrl';
 
 if exist([model_tracking,'.slx'], 'file')
     load_system(model_tracking);
-    set_param(model_tracking,'SimulationCommand','update','StopTime', '45');
+    set_param(model_tracking, 'SimulationCommand', 'update','StopTime', '35');
+    set_param(model_tracking,'SimulationCommand','update');
     simOut = sim(model_tracking,'ReturnWorkspaceOutputs','on');
     disp('Tracking simulation completed successfully.');
 else
@@ -172,7 +173,8 @@ disp('--- REGULATION SETUP ---')
 disp(['q0_reg    = [', num2str(q0_reg.'), ']'])
 disp(['q_goal xy = [', num2str(x_goal), ', ', num2str(y_goal), ']'])
 
-simOut_reg = sim(model_reg,'ReturnWorkspaceOutputs','on','StopTime', '35');
+set_param(model_reg, 'SimulationCommand', 'update','StopTime', '35');
+simOut_reg = sim(model_reg,'ReturnWorkspaceOutputs','on');
 disp('Regulation simulation completed successfully.');
 
 %% ================================
@@ -261,12 +263,13 @@ h = [];
 labels = {};
 
 % ---- TRACKING ----
+h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'w', 'LineWidth',2);
+labels{end+1} = 'Tracking actual';
+
 if ~isempty(q_d_tr)
     h(end+1) = plot(q_d_tr(:,1)*scale, q_d_tr(:,2)*scale, 'r--', 'LineWidth',1.8);
     labels{end+1} = 'Tracking desired';
 end
-h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'w', 'LineWidth',2);
-labels{end+1} = 'Tracking actual';
 
 % ---- REGULATION ----
 if ~isempty(q_d_reg)
