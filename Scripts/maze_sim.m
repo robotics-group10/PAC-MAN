@@ -293,19 +293,63 @@ grid off;
 % VIDEO GENERATION (VARIABLE SPEED)
 %% ================================
 
-% --- SETUP AUDIO (Optional) ---
-audio_file = 'pacman_theme.mp3'; 
-try
-    [y_audio, Fs] = audioread(audio_file);
-    
-    % multiply 5 times the audio track
-    y_looped = repmat(y_audio, 50, 1); 
-    
-    sound(y_looped, Fs); 
-catch
-    disp('File audio non trovato. Procedo senza musica.');
-end
+% --- SETUP AUDIO (#1) and PLAY AUDIO (#1) (Optional, if you don't want it comment this section) ---
 
+death_file = 'pacman_end.mp3'; 
+y_death = []; 
+Fs_death = [];
+
+% --- Comment from here ---
+% try
+%     % Load intro and pacman wakawaka
+%     [y_intro, Fs_intro] = audioread('pacman_start.wav');
+%     [y_loop,  Fs_loop]  = audioread('pacman_theme.mp3');
+% 
+%     % Uniform channels (Mono vs Stereo) 
+%     if size(y_intro, 2) < size(y_loop, 2)
+%         y_intro = [y_intro, y_intro]; 
+%     elseif size(y_loop, 2) < size(y_intro, 2)
+%         y_loop = [y_loop, y_loop];   
+%     end
+% 
+%     % Uniform frequencies
+%     if Fs_intro ~= Fs_loop
+% 
+%         t_old = (0:length(y_loop)-1) / Fs_loop;
+%         t_new = (0 : 1/Fs_intro : t_old(end));
+% 
+%         % Interpolation (manual change of frequency)
+%         y_loop = interp1(t_old, y_loop, t_new, 'linear');
+% 
+%         if size(y_loop, 1) < size(y_loop, 2)
+%             y_loop = y_loop';
+%         end
+%     end
+% 
+%     % create sequence (Intro + wakawaka iterated)
+%     y_repeated = repmat(y_loop, 15, 1); % repeted 15 times
+% 
+%     % Merge and play the sound
+%     full_audio = [y_intro; y_repeated];
+%     sound(full_audio, Fs_intro);
+% 
+% catch ME
+%     disp(['Audio error: ' ME.message]);
+%     disp('I will continue without audio.');
+% end
+% 
+% 
+% if exist(death_file, 'file')
+%     try
+%         [y_death, Fs_death] = audioread(death_file);
+%     catch
+%         disp('Errore lettura file audio finale.');
+%     end
+% else
+%     disp(['File ' death_file ' non trovato.']);
+% end
+
+%% 
 % Create video directory and writer
 video_folder = fullfile(pwd,'Video');
 if ~exist(video_folder,'dir')
@@ -430,8 +474,8 @@ if exist('q_reg', 'var') && ~isempty(q_reg)
         if dist_to_end < 0.01 
             frames_at_target = frames_at_target + 1;
             
-            if frames_at_target > 60
-                disp('Target raggiunto e stabile. Interrompo registrazione video.');
+            if frames_at_target > 30
+                disp('Target reached and stable. Terminating the video recording.');
                 break; 
             end
         else
@@ -471,7 +515,16 @@ end
 
 % Stop audio 
 clear sound; 
+%% 
+% --- PLAY AUDIO (#2) ---
+if ~isempty(y_death)
+    sound(y_death, Fs_death);
+    
+    duration = length(y_death) / Fs_death;
+    pause(duration + 0.5); 
+end
 
+%% 
 % Close everything
 close(v);
 close(f);
