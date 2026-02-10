@@ -172,9 +172,14 @@ switch tuning_id
         kw_vals = linspace(small_k_w, big_k_w, num_k);
 
         goals = [
+            5     0
+            0     5
             0.2   0.2
+            0.5   0.3
             1     2
+            2     1
             10    5
+            15   20
         ];
 
         [k_optimal, final_avg_error] = tuning_cartesian_regulation( ...
