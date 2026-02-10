@@ -213,13 +213,13 @@ end
 %% ================================
 % SINGLE FINAL PLOT: MAZE + TRAJECTORIES
 %% ================================
-figure('Color','w'); % figure background white
+figure('Color','k'); % MODIFICATO: Sfondo figura nero (era 'w')
 hold on; axis equal tight;
 scale = 2;
 
 ax = gca;             % get current axes
-ax.Color  = 'k';
-ax.XColor = 'w';
+ax.Color  = 'k';      % Sfondo assi nero
+ax.XColor = 'w';      % Testo assi bianco
 ax.YColor = 'w';
 ax.LineWidth = 1.5;
 
@@ -228,7 +228,7 @@ for r = 1:nrows
     for c = 1:ncols
         if maze(r,c)==1
             rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
-                      'FaceColor','b', 'EdgeColor','b'); % walls black
+                      'FaceColor', [0, 0, 0.8], 'EdgeColor', 'b', 'LineWidth', 2); 
         end
     end
 end
@@ -239,9 +239,8 @@ rectangle('Position', [(c1-1)*scale, (nrows-r2)*scale, room_size*scale, room_siz
           'LineWidth',2, ...
           'LineStyle','--');
 
-
 xlabel('X'); ylabel('Y');
-title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)');
+title('Maze with Desired vs Actual Trajectories (Tracking + Regulation)', 'Color', 'w'); 
 axis([0 ncols*scale 0 nrows*scale]);
 
 % ---- PARKING BOX ----
@@ -249,6 +248,7 @@ park_width  = 1.2 * scale;   % along x
 park_height = 1.2 * scale;   % along y
 park_x = x_goal*scale - park_width/2;
 park_y = y_goal*scale - park_height/2;
+
 rectangle('Position', [park_x, park_y, park_width, park_height], ...
           'EdgeColor', [0 1 0], ...
           'LineWidth', 2.5, ...
@@ -265,20 +265,16 @@ if ~isempty(q_d_tr)
     h(end+1) = plot(q_d_tr(:,1)*scale, q_d_tr(:,2)*scale, 'r--', 'LineWidth',1.8);
     labels{end+1} = 'Tracking desired';
 end
-
 h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'w', 'LineWidth',2);
 labels{end+1} = 'Tracking actual';
 
 % ---- REGULATION ----
-
 if ~isempty(q_d_reg)
-    h(end+1) = plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'b--', 'LineWidth',1.8);
+    h(end+1) = plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'c--', 'LineWidth',1.8);
     labels{end+1} = 'Regulation desired';
 end
-
 h(end+1) = plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'w', 'LineWidth',2);
 labels{end+1} = 'Regulation actual';
-
 
 % ---- START & GOAL ----
 h(end+1) = plot(x_d(1)*scale, y_d(1)*scale, 'go', ...
@@ -289,34 +285,28 @@ h(end+1) = plot(x_goal*scale, y_goal*scale, 'mo', ...
     'MarkerFaceColor','m', 'MarkerSize',8);
 labels{end+1} = 'Regulation goal';
 
-legend(h, labels, 'Location','best');
-
+legend(h, labels, 'Location','best', 'TextColor', 'w', 'Color', 'k'); 
 grid off;
 
-%% Video Generation
+%% Video Generation - Pacman Style
 %% ================================
 % VIDEO GENERATION (VARIABLE SPEED)
 %% ================================
 
-
-
-
-%% Video Generation - Pacman Style
-%% ================================
-
-% --- SETUP AUDIO (Opzionale) ---
-% Nota: VideoWriter non salva l'audio nel file MP4. 
-% Questo blocco riproduce l'audio durante la generazione per "effetto scenico".
-audio_file = 'pacman_theme.mp3'; % Assicurati che il file esista
+% --- SETUP AUDIO (Optional) ---
+audio_file = 'pacman_theme.mp3'; 
 try
     [y_audio, Fs] = audioread(audio_file);
-    % Riproduci l'audio (solo se vuoi sentirlo mentre genera)
-    sound(y_audio, Fs); 
+    
+    % multiply 5 times the audio track
+    y_looped = repmat(y_audio, 50, 1); 
+    
+    sound(y_looped, Fs); 
 catch
-    disp('File audio non trovato o non supportato. Procedo senza musica.');
+    disp('File audio non trovato. Procedo senza musica.');
 end
 
-% --- SETUP VIDEO ---
+% Create video directory and writer
 video_folder = fullfile(pwd,'Video');
 if ~exist(video_folder,'dir')
     mkdir(video_folder);
@@ -327,7 +317,7 @@ v.FrameRate = 30;
 v.Quality = 100;
 open(v);
 
-% --- SETUP FIGURE ---
+% Setup figure
 f = figure('Color','k', 'Position', [100, 100, 800, 800]); 
 scale = 2;
 
@@ -342,12 +332,10 @@ xlabel('X [m]'); ylabel('Y [m]');
 title('Pacman Project - Unicycle Trajectory', 'Color', 'w');
 axis([0 ncols*scale 0 nrows*scale]);
 
-% --- DRAW MAZE WALLS ---
-% Disegna i muri in blu classico Pacman
+% Draw Maze Walls
 for r = 1:nrows
     for c = 1:ncols
         if maze(r,c) == 1
-            % Muri blu con bordo blu
             rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
                       'FaceColor', [0, 0, 0.8], 'EdgeColor', 'b', 'LineWidth', 2); 
         end
@@ -358,26 +346,24 @@ end
 rectangle('Position', [park_x, park_y, park_width, park_height], ...
           'EdgeColor', 'g', ...
           'LineWidth', 2, ...
-          'LineStyle', '-');
+          'LineStyle', '--');
 
-% --- INITIALIZE PLOT OBJECTS ---
-% Percorso (pallini bianchi stile "pillole" o linea continua)
-h_path = plot(nan, nan, 'w.', 'MarkerSize', 8); % Usa '.' per sembrare pillole, o '-' per linea
-
-% Robot (Pacman): Inizializzato vuoto, verrà aggiornato nel loop
+% Initialize plot objects
+h_path = plot(nan, nan, 'w.', 'MarkerSize', 8); 
 h_robot = patch('XData', [], 'YData', [], 'FaceColor', 'y', 'EdgeColor', 'k'); 
-
-% Occhio (opzionale, per dettaglio)
+% Nuovo: Oggetto per l'occhio
 h_eye = plot(nan, nan, 'ko', 'MarkerFaceColor', 'k', 'MarkerSize', 4);
+
+% --- Parameters PACMAN geometry ---
+pacman_radius = 0.4 * scale; 
+pac_res = 30; 
 
 disp('Generating video...');
 
-% --- PARAMETRI PACMAN ---
-pacman_radius = 0.4 * scale; % Raggio del Pacman
-pac_res = 30; % Risoluzione del cerchio
+% First generate trajectory
+step_tracking = 5; % bigger => faster
 
-% --- 1. TRAJECTORY GENERATION ---
-step_tracking = 5; % Salta frame per velocizzare
+% Initialize history containers
 path_x_history = [];
 path_y_history = [];
 
@@ -385,66 +371,84 @@ if exist('q_tr', 'var') && ~isempty(q_tr)
     N_tr = size(q_tr, 1);
     
     for i = 1:step_tracking:N_tr
-        % Stato corrente
+        % Current state
         x = q_tr(i, 1) * scale;
         y = q_tr(i, 2) * scale;
         th = q_tr(i, 3);
         
-        % Aggiorna percorso
+        % Update path
         current_path_x = q_tr(1:i, 1) * scale;
         current_path_y = q_tr(1:i, 2) * scale;
         set(h_path, 'XData', current_path_x, 'YData', current_path_y);
         
-        % --- CALCOLO GEOMETRIA PACMAN ---
-        % Animazione bocca: Oscilla tra 0.05 e 0.8 radianti
+        % Update robot (Pacman Logic)
+        % --- Computing PACMAN geometry ---
+        % mouth animation (wakka-wakka)
         mouth_opening = 0.05 + abs(sin(i/3)) * 0.7; 
         
-        % Crea i punti del settore circolare (0 è il centro)
+        % Creation point circular section 
         angles = linspace(mouth_opening, 2*pi - mouth_opening, pac_res);
-        % Aggiungi il centro (0,0) all'inizio e alla fine per chiudere la shape
         pac_x_local = [0, cos(angles) * pacman_radius, 0];
         pac_y_local = [0, sin(angles) * pacman_radius, 0];
         
-        % Rotazione (Matrice R)
+        % Rotation and translation
         R = [cos(th), -sin(th); sin(th), cos(th)];
         pac_transformed = (R * [pac_x_local; pac_y_local])';
         
-        % Traslazione
         set(h_robot, 'XData', pac_transformed(:,1) + x, ...
                      'YData', pac_transformed(:,2) + y);
-                 
-        % Posiziona l'occhio (in alto rispetto alla bocca)
-        eye_pos_local = [0.1 * pacman_radius; 0.6 * pacman_radius]; % Offset relativo
+
+        % Eye update
+        eye_pos_local = [0.1 * pacman_radius; 0.6 * pacman_radius];
         eye_transformed = (R * eye_pos_local)';
         set(h_eye, 'XData', eye_transformed(1) + x, 'YData', eye_transformed(2) + y);
         
         writeVideo(v, getframe(f));
     end
     
-    % Salva storia completa
+    % Store the final full path of tracking to keep it on screen later
     path_x_history = q_tr(:, 1) * scale;
     path_y_history = q_tr(:, 2) * scale;
 end
 
-% --- 2. REGULATION GENERATION ---
-step_regulation = 1; % Più preciso
+% Now generate regulation
+step_regulation = 1; % don't skip frames
 if exist('q_reg', 'var') && ~isempty(q_reg)
     N_reg = size(q_reg, 1);
     
     for i = 1:step_regulation:N_reg
-        % Stato corrente
+        % Current state
         x = q_reg(i, 1) * scale;
         y = q_reg(i, 2) * scale;
         th = q_reg(i, 3);
         
-        % Aggiorna percorso (Storia + Attuale)
+
+        % Calcola distanza dalla posizione finale registrata
+        dist_to_end = norm(q_reg(i, 1:2) - q_reg(end, 1:2));
+        
+        % Intelligent video stop in case of 60 equals frames after the regulation step
+        if dist_to_end < 0.01 
+            frames_at_target = frames_at_target + 1;
+            
+            if frames_at_target > 60
+                disp('Target raggiunto e stabile. Interrompo registrazione video.');
+                break; 
+            end
+        else
+            frames_at_target = 0; 
+        end
+
+
+        % Update path: concatenate history + current regulation path
         curr_reg_x = q_reg(1:i, 1) * scale;
         curr_reg_y = q_reg(1:i, 2) * scale;
+        
         set(h_path, 'XData', [path_x_history; curr_reg_x], ...
                     'YData', [path_y_history; curr_reg_y]);
         
-        % --- CALCOLO GEOMETRIA PACMAN ---
-        mouth_opening = 0.05 + abs(sin((i + N_tr)/3)) * 0.7; % Continua oscillazione
+        % Update robot (Pacman Logic)
+        % --- Computing PACMAN geometry ---
+        mouth_opening = 0.05 + abs(sin((i + N_tr)/3)) * 0.7; 
         
         angles = linspace(mouth_opening, 2*pi - mouth_opening, pac_res);
         pac_x_local = [0, cos(angles) * pacman_radius, 0];
@@ -456,6 +460,7 @@ if exist('q_reg', 'var') && ~isempty(q_reg)
         set(h_robot, 'XData', pac_transformed(:,1) + x, ...
                      'YData', pac_transformed(:,2) + y);
                  
+        % eye update
         eye_pos_local = [0.1 * pacman_radius; 0.6 * pacman_radius];
         eye_transformed = (R * eye_pos_local)';
         set(h_eye, 'XData', eye_transformed(1) + x, 'YData', eye_transformed(2) + y);
@@ -464,16 +469,13 @@ if exist('q_reg', 'var') && ~isempty(q_reg)
     end
 end
 
-% Stop audio se sta ancora suonando
+% Stop audio 
 clear sound; 
 
+% Close everything
 close(v);
 close(f);
-disp(['Video salvato in: ', video_filename]);
-disp('NOTA: Il video salvato è muto. Per aggiungere l''audio, usa un editor video');
-disp('oppure ffmpeg da terminale:');
-disp(['ffmpeg -i "', video_filename, '" -i pacman_theme.mp3 -c:v copy -c:a aac -shortest output_with_audio.mp4']);
-
+disp(['Video saved to: ', video_filename]);
 
 
 
