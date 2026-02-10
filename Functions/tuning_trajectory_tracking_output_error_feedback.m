@@ -59,5 +59,24 @@ for k = 1:length(trajectories)
     
     % Plot and save results
     plot_and_save(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
+
+    % Create error plot
+    [~, e] = cost_tracking(simOut);
+    time = simOut.logsout.getElement('q').Values.Time;
+    hFig = figure('Visible', 'off');
+    plot(time, e, 'r-', 'LineWidth', 1.5);
+    
+    title('Trajectory Tracking Error over Time');
+    xlabel('Time [s]');
+    ylabel('Position Error [m]');
+    grid on;
+    
+    % Save to disk
+    figure_name = sprintf('Trajectory_%d_PosError', k);
+    saveas(hFig, fullfile(figures_folder, [figure_name, '.png']));
+    
+    % Close the figure to free memory
+    close(hFig);
+    
 end
 end
