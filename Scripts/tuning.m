@@ -86,7 +86,7 @@ kp1_vals = [5 10 15];
 kp2_vals = [5 10 15];
 
 % Tune controller
-tuning_trajectory_tracking_output_error_feedback(model_tracking_output_error_feedback, trajectories, t_sim , a_vals, kp1_vals, kp2_vals, figures_folder)
+%tuning_trajectory_tracking_output_error_feedback(model_tracking_output_error_feedback, trajectories, t_sim , a_vals, kp1_vals, kp2_vals, figures_folder)
 
 
 %% CARTESIAN REGULATION (PARKING) CONFIGURATION
@@ -102,38 +102,55 @@ tuning_trajectory_tracking_output_error_feedback(model_tracking_output_error_fee
 %kw_vals = [6 8];
 
 % Best: Kv=3.00, Kw=9.00 
-kv_vals = [0.5 1 1.5 2 2.5 3];
-kw_vals = [3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9];
+% best from second test: Kv=0.50, Kw=4.33
+small_k_v = 0.5;
+big_k_v = 3;
+small_k_w = 2;
+big_k_w = 10;
+num_k = 4;
+kv_vals = linspace(small_k_v, big_k_v, num_k);
+kw_vals = linspace(small_k_w, big_k_w, num_k);
 
 % Define goals [x, y]
 goals = [
     % Near
     0.2   0.2
-    0.5   0.3
-   -0.3   0.4
-
+    %0.5   0.3
+    %-0.3   0.4
+ 
     % Medium
     1     2
-    2     1
-   -2     3
-    3    -2
+    %2     1
+    %-2     3
+    %3    -2
 
     % Far
     10    5
-   -8    12
-    15   20
-   -20  -15
+    %-8    12
+    %15   20
+    %-20  -15
 
     % Axes
-    5     0
-   -5     0
-    0     5
-    0    -5
+    %5     0
+   %-5     0
+    %0     5
+    %0    -5
 ];
 
 
 % Tune controller
-%tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder)
+[k_optimal, final_avg_error] = tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder);
+
+small_k_v = k_optimal(1) - 0.5;
+big_k_v = k_optimal(1) +0.5;
+
+small_k_w = k_optimal(2) - 1;
+big_k_w = k_optimal(2) + 1;
+
+kv_vals = linspace(small_k_v, big_k_v, num_k);
+kw_vals = linspace(small_k_w, big_k_w, num_k);
+
+[k_optimal, final_avg_error] = tuning_cartesian_regulation(model_reg_cart, goals, kv_vals, kw_vals, figures_folder);
 
 %% CARTESIAN POSTURE (PARKING) CONFIGURATION
 small_k = 2;
@@ -167,7 +184,7 @@ posture_goals = [
 ];
 
 % Tune controller
-[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
+%[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
 
 big_k_1 = k_optimal(1) + 1;
 big_k_2 = k_optimal(2) + 1;
@@ -181,7 +198,7 @@ k1_vals = linspace(small_k_1, big_k_1, num_k);
 k2_vals = linspace(small_k_2, big_k_2, num_k);
 k3_vals = linspace(small_k_3, big_k_3, num_k);
 
-[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
+%[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
 
 big_k_1 = k_optimal(1) + 0.5;
 big_k_2 = k_optimal(2) + 0.5;
@@ -195,4 +212,4 @@ k1_vals = linspace(small_k_1, big_k_1, num_k);
 k2_vals = linspace(small_k_2, big_k_2, num_k);
 k3_vals = linspace(small_k_3, big_k_3, num_k);
 
-[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
+%[k_optimal, final_avg_error] = tuning_posture_regulation(model_reg_post, posture_goals, k1_vals, k2_vals, k3_vals, figures_folder);
