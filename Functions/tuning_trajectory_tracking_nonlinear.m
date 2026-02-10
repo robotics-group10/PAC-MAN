@@ -54,7 +54,7 @@ for k = 1:length(trajectories)
     end
     
     % Update and run simulation
-    set_param(model_tracking, 'SimulationCommand', 'update');
+    set_param(model_tracking, 'SimulationCommand', 'update','StopTime', '10');
     simOut = sim(model_tracking, 'ReturnWorkspaceOutputs', 'on');
     
     % Plot and save results

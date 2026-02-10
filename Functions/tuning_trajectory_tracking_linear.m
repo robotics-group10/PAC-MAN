@@ -49,7 +49,7 @@ for k = 1:length(trajectories)
             'Value', num2str(best_tracking_params(i)));
     end
     
-    set_param(model_tracking, 'SimulationCommand', 'update');
+    set_param(model_tracking, 'SimulationCommand', 'update','StopTime', '10');
     simOut = sim(model_tracking,'ReturnWorkspaceOutputs', 'on');
     plot_and_save(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
 

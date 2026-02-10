@@ -63,10 +63,10 @@ trajectories = {
 % Best: eps = 0.9, a = 30
 
 eps_vals = [0.2 0.5 0.8];
-%a_vals   = [5 10 15];
+a_vals   = [5 10 15];
 
 % Tune controller
-%tuning_trajectory_tracking_linear(model_tracking_linear, trajectories, t_sim, eps_vals, a_vals, figures_folder)
+tuning_trajectory_tracking_linear(model_tracking_linear, trajectories, t_sim, eps_vals, a_vals, figures_folder)
 
 
 %% TRAJECTORY TRACKING NONLINEAR CONFIGURATION (#2)
