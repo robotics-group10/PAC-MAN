@@ -263,12 +263,13 @@ h = [];
 labels = {};
 
 % ---- TRACKING ----
+h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'w', 'LineWidth',2);
+labels{end+1} = 'Tracking actual';
+
 if ~isempty(q_d_tr)
     h(end+1) = plot(q_d_tr(:,1)*scale, q_d_tr(:,2)*scale, 'r--', 'LineWidth',1.8);
     labels{end+1} = 'Tracking desired';
 end
-h(end+1) = plot(q_tr(:,1)*scale, q_tr(:,2)*scale, 'w', 'LineWidth',2);
-labels{end+1} = 'Tracking actual';
 
 % ---- REGULATION ----
 if ~isempty(q_d_reg)
