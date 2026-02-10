@@ -123,9 +123,9 @@ disp(['Tracking end  = [', num2str([x_d(end), y_d(end), theta_d(end)]), ']'])
 %% ================================
 % TRACKING CONTROLLER SIMULATION
 %% ================================
-%model_tracking = 'traj_track_state_error_linearization_ctrl';
+model_tracking = 'traj_track_state_error_linearization_ctrl';
 %model_tracking = 'traj_track_state_error_nonlinear_ctlr';
-model_tracking = 'traj_track_output_error_feedback_ctrl';
+%model_tracking = 'traj_track_output_error_feedback_ctrl';
 
 if exist([model_tracking,'.slx'], 'file')
     load_system(model_tracking);
@@ -298,19 +298,36 @@ grid off;
 % VIDEO GENERATION (VARIABLE SPEED)
 %% ================================
 
-% Create video directory and writer
+
+
+
+%% Video Generation - Pacman Style
+%% ================================
+
+% --- SETUP AUDIO (Opzionale) ---
+% Nota: VideoWriter non salva l'audio nel file MP4. 
+% Questo blocco riproduce l'audio durante la generazione per "effetto scenico".
+audio_file = 'pacman_theme.mp3'; % Assicurati che il file esista
+try
+    [y_audio, Fs] = audioread(audio_file);
+    % Riproduci l'audio (solo se vuoi sentirlo mentre genera)
+    sound(y_audio, Fs); 
+catch
+    disp('File audio non trovato o non supportato. Procedo senza musica.');
+end
+
+% --- SETUP VIDEO ---
 video_folder = fullfile(pwd,'Video');
 if ~exist(video_folder,'dir')
     mkdir(video_folder);
 end
-
 video_filename = fullfile(video_folder, 'pacman_trajectory.mp4');
 v = VideoWriter(video_filename, 'MPEG-4');
 v.FrameRate = 30; 
 v.Quality = 100;
 open(v);
 
-% Setup figure
+% --- SETUP FIGURE ---
 f = figure('Color','k', 'Position', [100, 100, 800, 800]); 
 scale = 2;
 
@@ -325,37 +342,42 @@ xlabel('X [m]'); ylabel('Y [m]');
 title('Pacman Project - Unicycle Trajectory', 'Color', 'w');
 axis([0 ncols*scale 0 nrows*scale]);
 
-% Draw Maze Walls
+% --- DRAW MAZE WALLS ---
+% Disegna i muri in blu classico Pacman
 for r = 1:nrows
     for c = 1:ncols
         if maze(r,c) == 1
+            % Muri blu con bordo blu
             rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
-                      'FaceColor', 'b', 'EdgeColor', 'b'); 
+                      'FaceColor', [0, 0, 0.8], 'EdgeColor', 'b', 'LineWidth', 2); 
         end
     end
 end
+
 % ---- PARKING BOX ----
 rectangle('Position', [park_x, park_y, park_width, park_height], ...
           'EdgeColor', 'g', ...
           'LineWidth', 2, ...
           'LineStyle', '-');
 
-% Initialize plot objects
-h_path = plot(nan, nan, 'w-', 'LineWidth', 1.5); 
-h_robot = patch('XData', [], 'YData', [], 'FaceColor', 'y', 'EdgeColor', 'none'); 
+% --- INITIALIZE PLOT OBJECTS ---
+% Percorso (pallini bianchi stile "pillole" o linea continua)
+h_path = plot(nan, nan, 'w.', 'MarkerSize', 8); % Usa '.' per sembrare pillole, o '-' per linea
 
-% Triangle geometry
-tri_size = 0.6 * scale; 
-base_tri = [ 1.0,  0.0; 
-            -0.5,  0.6; 
-            -0.5, -0.6 ] * tri_size;
+% Robot (Pacman): Inizializzato vuoto, verrà aggiornato nel loop
+h_robot = patch('XData', [], 'YData', [], 'FaceColor', 'y', 'EdgeColor', 'k'); 
+
+% Occhio (opzionale, per dettaglio)
+h_eye = plot(nan, nan, 'ko', 'MarkerFaceColor', 'k', 'MarkerSize', 4);
 
 disp('Generating video...');
 
-% First generate trajectory
-step_tracking = 5; % bigger => faster
+% --- PARAMETRI PACMAN ---
+pacman_radius = 0.4 * scale; % Raggio del Pacman
+pac_res = 30; % Risoluzione del cerchio
 
-% Initialize history containers
+% --- 1. TRAJECTORY GENERATION ---
+step_tracking = 5; % Salta frame per velocizzare
 path_x_history = [];
 path_y_history = [];
 
@@ -363,58 +385,229 @@ if exist('q_tr', 'var') && ~isempty(q_tr)
     N_tr = size(q_tr, 1);
     
     for i = 1:step_tracking:N_tr
-        % Current state
+        % Stato corrente
         x = q_tr(i, 1) * scale;
         y = q_tr(i, 2) * scale;
         th = q_tr(i, 3);
         
-        % Update path
+        % Aggiorna percorso
         current_path_x = q_tr(1:i, 1) * scale;
         current_path_y = q_tr(1:i, 2) * scale;
         set(h_path, 'XData', current_path_x, 'YData', current_path_y);
         
-        % Update robot
+        % --- CALCOLO GEOMETRIA PACMAN ---
+        % Animazione bocca: Oscilla tra 0.05 e 0.8 radianti
+        mouth_opening = 0.05 + abs(sin(i/3)) * 0.7; 
+        
+        % Crea i punti del settore circolare (0 è il centro)
+        angles = linspace(mouth_opening, 2*pi - mouth_opening, pac_res);
+        % Aggiungi il centro (0,0) all'inizio e alla fine per chiudere la shape
+        pac_x_local = [0, cos(angles) * pacman_radius, 0];
+        pac_y_local = [0, sin(angles) * pacman_radius, 0];
+        
+        % Rotazione (Matrice R)
         R = [cos(th), -sin(th); sin(th), cos(th)];
-        tri = (R * base_tri')';
-        set(h_robot, 'XData', tri(:,1)+x, 'YData', tri(:,2)+y);
+        pac_transformed = (R * [pac_x_local; pac_y_local])';
+        
+        % Traslazione
+        set(h_robot, 'XData', pac_transformed(:,1) + x, ...
+                     'YData', pac_transformed(:,2) + y);
+                 
+        % Posiziona l'occhio (in alto rispetto alla bocca)
+        eye_pos_local = [0.1 * pacman_radius; 0.6 * pacman_radius]; % Offset relativo
+        eye_transformed = (R * eye_pos_local)';
+        set(h_eye, 'XData', eye_transformed(1) + x, 'YData', eye_transformed(2) + y);
         
         writeVideo(v, getframe(f));
     end
     
-    % Store the final full path of tracking to keep it on screen later
+    % Salva storia completa
     path_x_history = q_tr(:, 1) * scale;
     path_y_history = q_tr(:, 2) * scale;
 end
 
-% Now generate regulation
-step_regulation = 1; % don't skip frames
-
+% --- 2. REGULATION GENERATION ---
+step_regulation = 1; % Più preciso
 if exist('q_reg', 'var') && ~isempty(q_reg)
     N_reg = size(q_reg, 1);
     
     for i = 1:step_regulation:N_reg
-        % Current state
+        % Stato corrente
         x = q_reg(i, 1) * scale;
         y = q_reg(i, 2) * scale;
         th = q_reg(i, 3);
         
-        % Update path: concatenate history + current regulation path
+        % Aggiorna percorso (Storia + Attuale)
         curr_reg_x = q_reg(1:i, 1) * scale;
         curr_reg_y = q_reg(1:i, 2) * scale;
-        
         set(h_path, 'XData', [path_x_history; curr_reg_x], ...
                     'YData', [path_y_history; curr_reg_y]);
         
-        % Update robot triangle
+        % --- CALCOLO GEOMETRIA PACMAN ---
+        mouth_opening = 0.05 + abs(sin((i + N_tr)/3)) * 0.7; % Continua oscillazione
+        
+        angles = linspace(mouth_opening, 2*pi - mouth_opening, pac_res);
+        pac_x_local = [0, cos(angles) * pacman_radius, 0];
+        pac_y_local = [0, sin(angles) * pacman_radius, 0];
+        
         R = [cos(th), -sin(th); sin(th), cos(th)];
-        tri = (R * base_tri')';
-        set(h_robot, 'XData', tri(:,1)+x, 'YData', tri(:,2)+y);
+        pac_transformed = (R * [pac_x_local; pac_y_local])';
+        
+        set(h_robot, 'XData', pac_transformed(:,1) + x, ...
+                     'YData', pac_transformed(:,2) + y);
+                 
+        eye_pos_local = [0.1 * pacman_radius; 0.6 * pacman_radius];
+        eye_transformed = (R * eye_pos_local)';
+        set(h_eye, 'XData', eye_transformed(1) + x, 'YData', eye_transformed(2) + y);
         
         writeVideo(v, getframe(f));
     end
 end
 
-% Close everything
+% Stop audio se sta ancora suonando
+clear sound; 
+
 close(v);
 close(f);
-disp(['Video saved to: ', video_filename]);
+disp(['Video salvato in: ', video_filename]);
+disp('NOTA: Il video salvato è muto. Per aggiungere l''audio, usa un editor video');
+disp('oppure ffmpeg da terminale:');
+disp(['ffmpeg -i "', video_filename, '" -i pacman_theme.mp3 -c:v copy -c:a aac -shortest output_with_audio.mp4']);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% 
+% 
+% % Create video directory and writer
+% video_folder = fullfile(pwd,'Video');
+% if ~exist(video_folder,'dir')
+%     mkdir(video_folder);
+% end
+% 
+% video_filename = fullfile(video_folder, 'pacman_trajectory.mp4');
+% v = VideoWriter(video_filename, 'MPEG-4');
+% v.FrameRate = 30; 
+% v.Quality = 100;
+% open(v);
+% 
+% % Setup figure
+% f = figure('Color','k', 'Position', [100, 100, 800, 800]); 
+% scale = 2;
+% 
+% % Setup axes
+% ax = gca;
+% ax.Color = 'k';         
+% ax.XColor = 'w';        
+% ax.YColor = 'w';        
+% ax.LineWidth = 1.5;
+% hold on; axis equal tight;
+% xlabel('X [m]'); ylabel('Y [m]');
+% title('Pacman Project - Unicycle Trajectory', 'Color', 'w');
+% axis([0 ncols*scale 0 nrows*scale]);
+% 
+% % Draw Maze Walls
+% for r = 1:nrows
+%     for c = 1:ncols
+%         if maze(r,c) == 1
+%             rectangle('Position', [(c-1)*scale, (nrows-r)*scale, scale, scale], ...
+%                       'FaceColor', 'b', 'EdgeColor', 'b'); 
+%         end
+%     end
+% end
+% % ---- PARKING BOX ----
+% rectangle('Position', [park_x, park_y, park_width, park_height], ...
+%           'EdgeColor', 'g', ...
+%           'LineWidth', 2, ...
+%           'LineStyle', '--');
+% 
+% % Initialize plot objects
+% h_path = plot(nan, nan, 'w-', 'LineWidth', 1.5); 
+% h_robot = patch('XData', [], 'YData', [], 'FaceColor', 'y', 'EdgeColor', 'none'); 
+% 
+% % Triangle geometry
+% tri_size = 0.6 * scale; 
+% base_tri = [ 1.0,  0.0; 
+%             -0.5,  0.6; 
+%             -0.5, -0.6 ] * tri_size;
+% 
+% disp('Generating video...');
+% 
+% % First generate trajectory
+% step_tracking = 5; % bigger => faster
+% 
+% % Initialize history containers
+% path_x_history = [];
+% path_y_history = [];
+% 
+% if exist('q_tr', 'var') && ~isempty(q_tr)
+%     N_tr = size(q_tr, 1);
+% 
+%     for i = 1:step_tracking:N_tr
+%         % Current state
+%         x = q_tr(i, 1) * scale;
+%         y = q_tr(i, 2) * scale;
+%         th = q_tr(i, 3);
+% 
+%         % Update path
+%         current_path_x = q_tr(1:i, 1) * scale;
+%         current_path_y = q_tr(1:i, 2) * scale;
+%         set(h_path, 'XData', current_path_x, 'YData', current_path_y);
+% 
+%         % Update robot
+%         R = [cos(th), -sin(th); sin(th), cos(th)];
+%         tri = (R * base_tri')';
+%         set(h_robot, 'XData', tri(:,1)+x, 'YData', tri(:,2)+y);
+% 
+%         writeVideo(v, getframe(f));
+%     end
+% 
+%     % Store the final full path of tracking to keep it on screen later
+%     path_x_history = q_tr(:, 1) * scale;
+%     path_y_history = q_tr(:, 2) * scale;
+% end
+% 
+% % Now generate regulation
+% step_regulation = 1; % don't skip frames
+% 
+% if exist('q_reg', 'var') && ~isempty(q_reg)
+%     N_reg = size(q_reg, 1);
+% 
+%     for i = 1:step_regulation:N_reg
+%         % Current state
+%         x = q_reg(i, 1) * scale;
+%         y = q_reg(i, 2) * scale;
+%         th = q_reg(i, 3);
+% 
+%         % Update path: concatenate history + current regulation path
+%         curr_reg_x = q_reg(1:i, 1) * scale;
+%         curr_reg_y = q_reg(1:i, 2) * scale;
+% 
+%         set(h_path, 'XData', [path_x_history; curr_reg_x], ...
+%                     'YData', [path_y_history; curr_reg_y]);
+% 
+%         % Update robot triangle
+%         R = [cos(th), -sin(th); sin(th), cos(th)];
+%         tri = (R * base_tri')';
+%         set(h_robot, 'XData', tri(:,1)+x, 'YData', tri(:,2)+y);
+% 
+%         writeVideo(v, getframe(f));
+%     end
+% end
+% 
+% % Close everything
+% close(v);
+% close(f);
+% disp(['Video saved to: ', video_filename]);
