@@ -5,7 +5,7 @@
 % 4 = Cartesian regulation
 % 5 = Posture regulation
 
-tuning_id = 1;   % <<< scegli qui quale tuning eseguire
+tuning_id = 2;   % <<< scegli qui quale tuning eseguire
 
 %% PATH SETUP
 
@@ -122,8 +122,8 @@ switch tuning_id
     case 2
         % PARAMETERS
 
-        b_vals  = [0.2 0.5 0.8];
-        xi_vals = [5 10 15];
+        xi_vals  = linspace(0.1,0.9,8);
+        b_vals = linspace(1,30,8);
 
         tuning_trajectory_tracking_nonlinear( ...
             model_tracking_nonlinear, ...
