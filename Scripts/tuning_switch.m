@@ -5,7 +5,18 @@
 % 4 = Cartesian regulation
 % 5 = Posture regulation
 
-tuning_id = 2;   % <<< scegli qui quale tuning eseguire
+prompt = "Legend: \n" + ...
+    " 1 = Tracking linearizzato \n" + ...
+    " 2 = Tracking non lineare \n" + ...
+    " 3 = Tracking output error feedback \n" + ...
+    " 4 = Cartesian regulation \n" + ...
+    " 5 = Posture regulation \n " + ...
+    "\nEnter the value for the tuning of a controller (1-5): ";
+tuning_id = input(prompt);   % <<< scegli qui quale tuning eseguire
+
+if tuning_id < 1 || tuning_id > 5
+    error('Tuning_id must be in interval (1-5)!');
+end
 
 %% PATH SETUP
 
@@ -104,8 +115,14 @@ switch tuning_id
         % PARAMETERS
         % Best: eps = 0.9, a = 30
 
-        eps_vals = [0.2 0.5 0.8];
-        a_vals   = [5 10 15];
+        small_eps = 0.2;
+        big_eps = 0.5; 
+        small_a = 5;
+        big_a = 15;
+        num_vals = 3;
+
+        eps_vals = linspace(small_eps, big_eps, num_vals);
+        a_vals   = linspace(small_a, big_a, num_vals);
 
         tuning_trajectory_tracking_linear( ...
             model_tracking_linear, ...
@@ -121,9 +138,14 @@ switch tuning_id
     %% =========================================================
     case 2
         % PARAMETERS
+        small_xi = 0.1;
+        big_xi = 0.9;
+        small_b = 1;
+        big_b = 30;
+        num_vals = 8;
 
-        xi_vals  = linspace(0.1,0.9,8);
-        b_vals = linspace(1,30,8);
+        xi_vals  = linspace(small_xi, big_xi, num_vals);
+        b_vals = linspace(small_b, big_b, num_vals);
 
         tuning_trajectory_tracking_nonlinear( ...
             model_tracking_nonlinear, ...
@@ -139,10 +161,17 @@ switch tuning_id
     %% =========================================================
     case 3
         % PARAMETERS
+        small_a = 0.2;
+        big_a = 0.8;
+        small_kp1 = 5;
+        big_kp1 = 15;
+        small_kp2 = 5;
+        big_kp2 = 15;
+        num_vals = 3;
 
-        a_vals   = [0.2 0.5 0.8];
-        kp1_vals = [5 10 15];
-        kp2_vals = [5 10 15];
+        a_vals   = linspace(small_a, big_a, num_vals);
+        kp1_vals = linspace(small_kp1, big_kp1, num_vals);
+        kp2_vals = linspace(small_kp2, big_kp2, num_vals);
 
         tuning_trajectory_tracking_output_error_feedback( ...
             model_tracking_output_error_feedback, ...
@@ -162,8 +191,8 @@ switch tuning_id
         % best from second test: Kv = 0.50, Kw = 4.33
         % best considering all goals: Kv = 0.50, Kw = 3.53
 
-        small_k_v = 0.5;
-        big_k_v   = 3;
+        small_k_v = 2;
+        big_k_v   = 10;
         small_k_w = 2;
         big_k_w   = 10;
         num_k     = 4;
@@ -209,7 +238,7 @@ switch tuning_id
         % K1 = 0.93, K2 = 1.64, K3 = 5.79
 
         small_k = 2;
-        big_k   = 8;
+        big_k   = 10;
         num_k   = 3;
 
         k_range = linspace(small_k, big_k, num_k);
