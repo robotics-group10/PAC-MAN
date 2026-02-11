@@ -71,7 +71,7 @@ trajectories = {
     @(t) [t, sin(t)];            % X-linear sine wave
     @(t) [cos(t), t];            % Y-linear sine wave
     @(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
-    @(t) [t, 2*(t>5)];           % PureStep
+    %@(t) [t, 2*(t>5)];           % PureStep
     %@(t) squareTrajectory(t, 2); % Square
 };
 function p = squareTrajectory(t, L)
@@ -117,9 +117,9 @@ switch tuning_id
 
         small_eps = 0.1;
         big_eps = 0.9; 
-        small_a = 5;
+        small_a = 3;
         big_a = 20;
-        num_vals = 6;
+        num_vals = 8;
 
         eps_vals = linspace(small_eps, big_eps, num_vals);
         a_vals   = linspace(small_a, big_a, num_vals);
