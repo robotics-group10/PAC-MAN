@@ -32,11 +32,6 @@ for k = 1:size(goals,1)
     for i = 1:length(best_parking_params)
         set_param([model_reg '/' param_names_parking{i}], 'Value', num2str(best_parking_params(i)));
     end
-  
-    set_param(model_reg, 'SimulationCommand', 'update','StopTime', '60');
-    simOut = sim(model_reg, 'ReturnWorkspaceOutputs', 'on');
-    plot_and_save(simOut, sprintf('Cartesian_Parking_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
-  
 end
 
 
@@ -69,17 +64,21 @@ for k = 1:num_goals
     total_err = total_err + current_err;
     
     % Plot e salvataggio finale
-    plot_and_save(simOut, sprintf('FINAL_GlobalParams_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
+    plot_and_save(simOut, sprintf('Traj_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
 
     % Extract timeseries objects
     try
         q_ts  = simOut.logsout.getElement('q').Values;
         qd_ts = simOut.logsout.getElement('q_d').Values;
+        v_ts = simOut.logsout.getElement('v').Values;
+        w_ts = simOut.logsout.getElement('w').Values;
         
         % Get data and time vectors
         time = q_ts.Time;
         q    = q_ts.Data(:, 1:2);   % Actual [x, y]
         qd   = qd_ts.Data(:, 1:2);  % Desired [xd, yd]
+        v_data    = v_ts.Data;   % Linear Velocity [m/s]
+        w_data    = w_ts.Data;   % Angular Velocity [rad/s]
     catch
         error('Could not extract q or q_d from simOut. Check signal logging.');
     end
@@ -114,6 +113,31 @@ for k = 1:num_goals
     
     % Close fig
     close(hFig);
+
+    % Create Figure (Invisible)
+    hFig_ctrl = figure('Visible', 'off', 'Position', [100, 100, 800, 600]);
+    
+    % Subplot 1: Linear Velocity (v)
+    subplot(2, 1, 1);
+    plot(time, v_data, 'b-', 'LineWidth', 1.5);
+    title('Control Input: Linear Velocity (v)');
+    ylabel('Velocity [m/s]');
+    grid on;
+    
+    % Subplot 2: Angular Velocity (w)
+    subplot(2, 1, 2);
+    plot(time, w_data, 'r-', 'LineWidth', 1.5);
+    title('Control Input: Angular Velocity (w)');
+    xlabel('Time [s]');
+    ylabel('Ang. Vel [rad/s]');
+    grid on;
+
+    % Create filename
+    ctrl_fig_name = sprintf('Goal_%.1f_%.1f_input_kin', current_goal(1), current_goal(2));
+    full_path_ctrl = fullfile(figures_folder, [ctrl_fig_name, '.png']);
+    
+    saveas(hFig_ctrl, full_path_ctrl);
+    close(hFig_ctrl);
 end
 
 avg_error = total_err / num_goals;
