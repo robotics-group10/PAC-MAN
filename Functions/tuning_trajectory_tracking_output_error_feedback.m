@@ -154,4 +154,7 @@ end
 avg_error = total_err / length(trajectories);
 fprintf('\n>>> ERRORE MEDIO FINALE SU TUTTE LE TRAIETTORIE CON PARAMETRI OTTIMI: %.4f <<<\n', avg_error);
 
+best_gains = most_frequent_params;
+final_avg_error = avg_error;
+
 end
