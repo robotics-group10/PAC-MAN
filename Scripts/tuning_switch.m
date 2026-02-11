@@ -190,7 +190,7 @@ switch tuning_id
         % PARAMETERS
         % best from second test: Kv = 0.50, Kw = 4.33
         % best considering all goals: Kv = 0.50, Kw = 3.53
-        % last with 3 phases: Kv=0.79, Kw=4.46
+        % last with 3 phases: Kv=0.83, Kw=3.25
 
         small_k_v = 2;
         big_k_v   = 10;
