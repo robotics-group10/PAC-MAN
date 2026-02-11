@@ -190,6 +190,7 @@ switch tuning_id
         % PARAMETERS
         % best from second test: Kv = 0.50, Kw = 4.33
         % best considering all goals: Kv = 0.50, Kw = 3.53
+        % last with 3 phases: Kv=0.83, Kw=3.25
 
         small_k_v = 2;
         big_k_v   = 10;
@@ -218,16 +219,22 @@ switch tuning_id
             kw_vals, ...
             figures_folder );
 
-        % Refinement around optimum
-        kv_vals = linspace(k_optimal(1)-0.5, k_optimal(1)+0.5, num_k);
-        kw_vals = linspace(k_optimal(2)-1.0, k_optimal(2)+1.0, num_k);
 
-        [k_optimal, final_avg_error] = tuning_cartesian_regulation( ...
-            model_reg_cart, ...
-            goals, ...
-            kv_vals, ...
-            kw_vals, ...
-            figures_folder );
+        for delta = [1, 0.5]
+            kv_vals = linspace(k_optimal(1)-delta, k_optimal(1)+delta, num_k);
+            kw_vals = linspace(k_optimal(2)-delta, k_optimal(2)+delta, num_k);
+    
+            % Refinement around optimum
+            [k_optimal, final_avg_error] = tuning_cartesian_regulation( ...
+                model_reg_cart, ...
+                goals, ...
+                kv_vals, ...
+                kw_vals, ...
+                figures_folder );
+        end
+
+
+
 
 
     %% =========================================================
@@ -236,6 +243,7 @@ switch tuning_id
     case 5
         % best considering all goals:
         % K1 = 0.93, K2 = 1.64, K3 = 5.79
+        % best with (2-10) interval: K1=0.86, K2=0.50, K3=5.36
 
         small_k = 2;
         big_k   = 10;
