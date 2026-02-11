@@ -33,7 +33,7 @@ for k = 1:size(goals,1)
         set_param([model_reg '/' param_names_parking{i}], 'Value', num2str(best_parking_params(i)));
     end
   
-    set_param(model_reg, 'SimulationCommand', 'update','StopTime', '10');
+    set_param(model_reg, 'SimulationCommand', 'update','StopTime', '60');
     simOut = sim(model_reg, 'ReturnWorkspaceOutputs', 'on');
     plot_and_save(simOut, sprintf('Cartesian_Parking_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
   
