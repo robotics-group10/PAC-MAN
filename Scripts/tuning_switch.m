@@ -69,10 +69,10 @@ t_sim = linspace(0,10,100000);
 trajectories = {
     @(t) [2*cos(t), 2*sin(t)];   % Circle
     @(t) [t, sin(t)];            % X-linear sine wave
-    @(t) [cos(t), t];            % Y-linear sine wave
-    @(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
-    @(t) [t, 2*(t>5)];           % PureStep
-    @(t) squareTrajectory(t, 2); % Square
+    %@(t) [cos(t), t];            % Y-linear sine wave
+    %@(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
+    %@(t) [t, 2*(t>5)];           % PureStep
+    %@(t) squareTrajectory(t, 2); % Square
 };
 function p = squareTrajectory(t, L)
 
