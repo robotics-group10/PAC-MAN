@@ -195,6 +195,7 @@ switch tuning_id
         % best from second test: Kv = 0.50, Kw = 4.33
         % best considering all goals: Kv = 0.50, Kw = 3.53
         % last with 3 phases: Kv=0.83, Kw=3.25
+        % best without saturation: Kv=2.79, Kw=7.42
 
         small_k_v = 2;
         big_k_v   = 10;
@@ -248,6 +249,7 @@ switch tuning_id
         % best considering all goals:
         % K1 = 0.93, K2 = 1.64, K3 = 5.79
         % best with (2-10) interval: K1=0.86, K2=0.50, K3=5.36
+        % best without saturation: K1=3.71, K2=2.00, K3=6.00
 
         small_k = 2;
         big_k   = 10;
