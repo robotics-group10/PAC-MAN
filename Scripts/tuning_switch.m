@@ -162,12 +162,12 @@ switch tuning_id
     case 3
         % PARAMETERS
         small_a = 0.2;
-        big_a = 0.8;
-        small_kp1 = 5;
-        big_kp1 = 15;
-        small_kp2 = 5;
-        big_kp2 = 15;
-        num_vals = 3;
+        big_a = 2.0;
+        small_kp1 = 3;
+        big_kp1 = 20;
+        small_kp2 = 3;
+        big_kp2 = 20;
+        num_vals = 8;
 
         a_vals   = linspace(small_a, big_a, num_vals);
         kp1_vals = linspace(small_kp1, big_kp1, num_vals);
