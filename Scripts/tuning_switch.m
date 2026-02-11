@@ -69,8 +69,8 @@ t_sim = linspace(0,10,100000);
 trajectories = {
     @(t) [2*cos(t), 2*sin(t)];   % Circle
     @(t) [t, sin(t)];            % X-linear sine wave
-    %@(t) [cos(t), t];            % Y-linear sine wave
-    %@(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
+    @(t) [cos(t), t];            % Y-linear sine wave
+    @(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
     %@(t) [t, 2*(t>5)];           % PureStep
     %@(t) squareTrajectory(t, 2); % Square
 };
@@ -113,7 +113,7 @@ switch tuning_id
     %% =========================================================
     case 1
         % PARAMETERS
-        % Best: eps = 0.9, a = 30
+        % Best: eps=0.87, a=20.00
 
         small_eps = 0.1;
         big_eps = 0.9; 
