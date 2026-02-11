@@ -113,7 +113,7 @@ switch tuning_id
     %% =========================================================
     case 1
         % PARAMETERS
-        % Best: eps=0.87, a=20.00
+        % Best: eps=0.87, a=20.00, mean_err_optimal= 0.0016
 
         small_eps = 0.1;
         big_eps = 0.9; 
