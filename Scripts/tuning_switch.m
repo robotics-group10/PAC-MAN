@@ -71,8 +71,8 @@ trajectories = {
     @(t) [t, sin(t)];            % X-linear sine wave
     @(t) [cos(t), t];            % Y-linear sine wave
     @(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
-    %@(t) [t, 2*(t>5)];           % PureStep
-    %@(t) squareTrajectory(t, 2); % Square
+    @(t) [t, 2*(t>5)];           % PureStep
+    @(t) squareTrajectory(t, 2); % Square
 };
 function p = squareTrajectory(t, L)
 
@@ -163,6 +163,8 @@ switch tuning_id
     %% =========================================================
     case 3
         % PARAMETERS
+        % Best: a=0.20, kp1=11.50, kp2=13.52, mean_err_optimal= 0.0099
+
         small_a = 0.2;
         big_a = 2.0;
         small_kp1 = 3;
