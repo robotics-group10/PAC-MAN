@@ -160,6 +160,8 @@ switch tuning_id
     %% TRAJECTORY TRACKING OUTPUT ERROR FEEDBACK (#3)
     %% =========================================================
     case 3
+        
+        % best params: a=0.20, kp1=13.33, kp2=11.67
         % PARAMETERS
         small_a = 0.2;
         big_a = 0.8;
