@@ -46,63 +46,6 @@ for k = 1:length(trajectories)
 
     fprintf('Trajectory %d -> eps=%.2f, a=%.2f | RMS=%.4f\n', ...
         k, best_tracking_params(1), best_tracking_params(2), best_tracking_err);
-    
-
-    % Re-run simulation with optimal parameters and plot
-    param_names_tracking = {'eps','a'};
-    for i = 1:length(best_tracking_params)
-        set_param([model_tracking '/' param_names_tracking{i}], ... 
-            'Value', num2str(best_tracking_params(i)));
-    end
-    
-    set_param(model_tracking, 'SimulationCommand', 'update','StopTime', '10');
-    simOut = sim(model_tracking,'ReturnWorkspaceOutputs', 'on');
-    plot_and_save(simOut, sprintf('Trajectory_%d_Tracking', k), figures_folder);
-
-    % Extract timeseries objects
-    try
-        q_ts  = simOut.logsout.getElement('q').Values;
-        qd_ts = simOut.logsout.getElement('q_d').Values;
-        
-        % Get data and time vectors
-        time = q_ts.Time;
-        q    = q_ts.Data(:, 1:2);   % Actual [x, y]
-        qd   = qd_ts.Data(:, 1:2);  % Desired [xd, yd]
-    catch
-        error('Could not extract q or q_d from simOut. Check signal logging.');
-    end
-    
-    % Compute component errors
-    error_x = qd(:, 1) - q(:, 1); % x_d - x
-    error_y = qd(:, 2) - q(:, 2); % y_d - y
-    
-    % Create figure
-    hFig = figure('Visible', 'off', 'Position', [100, 100, 800, 600]);
-    
-    % Subplot 1: X Error
-    subplot(2, 1, 1);
-    plot(time, error_x, 'b-', 'LineWidth', 1.5);
-    title(['Trajectory ' num2str(k) ': Position Error X (x_d - x)']);
-    ylabel('Error [m]');
-    grid on;
-    
-    % Subplot 2: Y Error
-    subplot(2, 1, 2);
-    plot(time, error_y, 'r-', 'LineWidth', 1.5);
-    title(['Trajectory ' num2str(k) ': Position Error Y (y_d - y)']);
-    xlabel('Time [s]');
-    ylabel('Error [m]');
-    grid on;
-    
-    % Save to disk
-    figure_name = sprintf('Trajectory_%d_PosError', k);
-    full_path = fullfile(figures_folder, [figure_name, '.png']);
-    
-    saveas(hFig, full_path);
-    
-    % Close fig
-    close(hFig);
-    
 end
 
 % Parametri ottimali medi sulle traiettorie
@@ -144,7 +87,78 @@ for k = 1:length(trajectories)
     total_err = total_err + tracking_cost(simOut);
 
     % Salva grafico per la traiettoria finale con parametri medi
-    plot_and_save(simOut, sprintf('Trajectory_%d_FinalTracking', k), figures_folder);
+    plot_and_save(simOut, sprintf('Trajectory_%d', k), figures_folder);
+
+    % Extract timeseries objects
+    try
+        q_ts  = simOut.logsout.getElement('q').Values;
+        qd_ts = simOut.logsout.getElement('q_d').Values;
+        v_ts = simOut.logsout.getElement('v').Values;
+        w_ts = simOut.logsout.getElement('w').Values;
+        
+        % Get data and time vectors
+        time = q_ts.Time;
+        q    = q_ts.Data(:, 1:2);   % Actual [x, y]
+        qd   = qd_ts.Data(:, 1:2);  % Desired [xd, yd]
+        v_data    = v_ts.Data;   % Linear Velocity [m/s]
+        w_data    = w_ts.Data;   % Angular Velocity [rad/s]
+    catch
+        error('Could not extract q or q_d from simOut. Check signal logging.');
+    end
+    
+    % Compute component errors
+    error_x = qd(:, 1) - q(:, 1); % x_d - x
+    error_y = qd(:, 2) - q(:, 2); % y_d - y
+    
+    % Create figure
+    hFig = figure('Visible', 'off', 'Position', [100, 100, 800, 600]);
+    
+    % Subplot 1: X Error
+    subplot(2, 1, 1);
+    plot(time, error_x, 'b-', 'LineWidth', 1.5);
+    title(['Trajectory ' num2str(k) ': Position Error X (x_d - x)']);
+    ylabel('Error [m]');
+    grid on;
+    
+    % Subplot 2: Y Error
+    subplot(2, 1, 2);
+    plot(time, error_y, 'r-', 'LineWidth', 1.5);
+    title(['Trajectory ' num2str(k) ': Position Error Y (y_d - y)']);
+    xlabel('Time [s]');
+    ylabel('Error [m]');
+    grid on;
+    
+    % Save to disk
+    figure_name = sprintf('Trajectory_%d_PosError', k);
+    full_path = fullfile(figures_folder, [figure_name, '.png']);
+    
+    saveas(hFig, full_path);
+    close(hFig);
+    
+    % Create Figure (Invisible)
+    hFig_ctrl = figure('Visible', 'off', 'Position', [100, 100, 800, 600]);
+    
+    % Subplot 1: Linear Velocity (v)
+    subplot(2, 1, 1);
+    plot(time, v_data, 'b-', 'LineWidth', 1.5);
+    title('Control Input: Linear Velocity (v)');
+    ylabel('Velocity [m/s]');
+    grid on;
+    
+    % Subplot 2: Angular Velocity (w)
+    subplot(2, 1, 2);
+    plot(time, w_data, 'r-', 'LineWidth', 1.5);
+    title('Control Input: Angular Velocity (w)');
+    xlabel('Time [s]');
+    ylabel('Ang. Vel [rad/s]');
+    grid on;
+
+    % Create filename
+    ctrl_fig_name = sprintf('Trajectory_%d_input_kin', k);
+    full_path_ctrl = fullfile(figures_folder, [ctrl_fig_name, '.png']);
+    
+    saveas(hFig_ctrl, full_path_ctrl);
+    close(hFig_ctrl);
 end
 
 avg_error = total_err / length(trajectories);
