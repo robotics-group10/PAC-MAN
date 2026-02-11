@@ -69,8 +69,8 @@ t_sim = linspace(0,10,100000);
 trajectories = {
     @(t) [2*cos(t), 2*sin(t)];   % Circle
     @(t) [t, sin(t)];            % X-linear sine wave
-    %@(t) [cos(t), t];            % Y-linear sine wave
-    %@(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
+    @(t) [cos(t), t];            % Y-linear sine wave
+    @(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
     %@(t) [t, 2*(t>5)];           % PureStep
     %@(t) squareTrajectory(t, 2); % Square
 };
@@ -115,11 +115,11 @@ switch tuning_id
         % PARAMETERS
         % Best: eps = 0.9, a = 30
 
-        small_eps = 0.2;
-        big_eps = 0.5; 
-        small_a = 5;
-        big_a = 15;
-        num_vals = 3;
+        small_eps = 0.1;
+        big_eps = 0.9; 
+        small_a = 3;
+        big_a = 20;
+        num_vals = 8;
 
         eps_vals = linspace(small_eps, big_eps, num_vals);
         a_vals   = linspace(small_a, big_a, num_vals);
@@ -160,6 +160,8 @@ switch tuning_id
     %% TRAJECTORY TRACKING OUTPUT ERROR FEEDBACK (#3)
     %% =========================================================
     case 3
+        
+        % best params: a=0.20, kp1=13.33, kp2=11.67
         % PARAMETERS
         small_a = 0.2;
         big_a = 0.8;
