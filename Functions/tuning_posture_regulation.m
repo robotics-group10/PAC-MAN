@@ -69,6 +69,59 @@ for k = 1:num_goals
     
     % Plot e salvataggio finale
     plot_and_save(simOut, sprintf('FINAL_GlobalParams_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
+
+    % Extract timeseries objects
+    try
+        q_ts  = simOut.logsout.getElement('q').Values;
+        qd_ts = simOut.logsout.getElement('q_d').Values;
+        theta_ts = simOut.logsout.getElement('theta').Values;
+        
+        % Get data and time vectors
+        time = q_ts.Time;
+        q    = q_ts.Data(:, 1:2);   % Actual [x, y]
+        qd   = qd_ts.Data(:, 1:2);  % Desired [xd, yd]
+        theta = theta_ts.Data;      % Actual Theta
+    catch
+        error('Could not extract q, q_d, or theta from simOut. Check signal logging.');
+    end
+    
+    % Compute component errors
+    error_x = qd(:, 1) - q(:, 1); % x_d - x
+    error_y = qd(:, 2) - q(:, 2); % y_d - y
+    
+    % Create figure (Increased height to 800 for better visibility of 3 plots)
+    hFig = figure('Visible', 'off', 'Position', [100, 100, 800, 800]);
+    
+    % Subplot 1: X Error
+    subplot(3, 1, 1);
+    plot(time, error_x, 'b-', 'LineWidth', 1.5);
+    title(['Position Error X (x_d - x)']);
+    ylabel('Error [m]');
+    grid on;
+    
+    % Subplot 2: Y Error
+    subplot(3, 1, 2);
+    plot(time, error_y, 'r-', 'LineWidth', 1.5);
+    title(['Position Error Y (y_d - y)']);
+    ylabel('Error [m]');
+    grid on;
+    
+    % Subplot 3: Theta (Orientation)
+    subplot(3, 1, 3);
+    plot(time, theta, 'g-', 'LineWidth', 1.5);
+    title('Theta (Actual Orientation)');
+    xlabel('Time [s]');
+    ylabel('Angle [rad]');
+    grid on;
+    
+    % Save to disk
+    figure_name = sprintf('Pos_err_Goal_%.1f_%.1f', current_goal(1), current_goal(2));
+    full_path = fullfile(figures_folder, [figure_name, '.png']);
+    
+    saveas(hFig, full_path);
+    
+    % Close fig
+    close(hFig);
 end
 
 avg_error = total_err / num_goals;

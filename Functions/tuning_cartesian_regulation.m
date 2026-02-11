@@ -70,6 +70,50 @@ for k = 1:num_goals
     
     % Plot e salvataggio finale
     plot_and_save(simOut, sprintf('FINAL_GlobalParams_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
+
+    % Extract timeseries objects
+    try
+        q_ts  = simOut.logsout.getElement('q').Values;
+        qd_ts = simOut.logsout.getElement('q_d').Values;
+        
+        % Get data and time vectors
+        time = q_ts.Time;
+        q    = q_ts.Data(:, 1:2);   % Actual [x, y]
+        qd   = qd_ts.Data(:, 1:2);  % Desired [xd, yd]
+    catch
+        error('Could not extract q or q_d from simOut. Check signal logging.');
+    end
+    
+    % Compute component errors
+    error_x = qd(:, 1) - q(:, 1); % x_d - x
+    error_y = qd(:, 2) - q(:, 2); % y_d - y
+    
+    % Create figure
+    hFig = figure('Visible', 'off', 'Position', [100, 100, 800, 600]);
+    
+    % Subplot 1: X Error
+    subplot(2, 1, 1);
+    plot(time, error_x, 'b-', 'LineWidth', 1.5);
+    title(['Position Error X (x_d - x)']);
+    ylabel('Error [m]');
+    grid on;
+    
+    % Subplot 2: Y Error
+    subplot(2, 1, 2);
+    plot(time, error_y, 'r-', 'LineWidth', 1.5);
+    title(['Position Error Y (y_d - y)']);
+    xlabel('Time [s]');
+    ylabel('Error [m]');
+    grid on;
+    
+    % Save to disk
+    figure_name = sprintf('Pos_err_Goal_%.1f_%.1f', current_goal(1), current_goal(2));
+    full_path = fullfile(figures_folder, [figure_name, '.png']);
+    
+    saveas(hFig, full_path);
+    
+    % Close fig
+    close(hFig);
 end
 
 avg_error = total_err / num_goals;
