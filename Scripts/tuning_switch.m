@@ -115,11 +115,11 @@ switch tuning_id
         % PARAMETERS
         % Best: eps = 0.9, a = 30
 
-        small_eps = 0.2;
-        big_eps = 0.5; 
-        small_a = 5;
-        big_a = 15;
-        num_vals = 3;
+        small_eps = 0.1;
+        big_eps = 0.9; 
+        small_a = 3;
+        big_a = 20;
+        num_vals = 8;
 
         eps_vals = linspace(small_eps, big_eps, num_vals);
         a_vals   = linspace(small_a, big_a, num_vals);
