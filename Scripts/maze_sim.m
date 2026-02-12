@@ -140,8 +140,8 @@ end
 %% ================================
 % REGULATION (POST-TRAJECTORY)
 %% ================================
-%model_reg = 'cartesian_regulation_ctrl';
-model_reg = 'posture_regulation_ctrl';
+model_reg = 'cartesian_regulation_ctrl';
+%model_reg = 'posture_regulation_ctrl';
 
 if exist([model_reg,'.slx'],'file')
     load_system(model_reg);
@@ -211,6 +211,79 @@ if ismember('q_d', simOut_reg.logsout.getElementNames)
 else
     q_d_reg = [];
 end
+%% ================================
+% ERROR PLOTS (TRACKING + REGULATION)
+%% ================================
+
+%% ---------------- TRACKING ERRORS ----------------
+if ~isempty(q_d_tr)
+
+    % tempo tracking (approssimato uniforme)
+    N_tr = size(q_tr,1);
+    t_tr = linspace(0,35,N_tr)';
+
+    err_x_tr = q_d_tr(:,1) - q_tr(:,1);
+    err_y_tr = q_d_tr(:,2) - q_tr(:,2);
+    err_theta_tr = wrapToPi(q_d_tr(:,3) - q_tr(:,3));
+
+    hErrTr = figure('Visible','off','Position',[100 100 900 700]);
+
+    subplot(3,1,1)
+    plot(t_tr, err_x_tr,'b','LineWidth',1.5)
+    ylabel('e_x [m]')
+    title('Tracking Errors')
+    grid on
+
+    subplot(3,1,2)
+    plot(t_tr, err_y_tr,'r','LineWidth',1.5)
+    ylabel('e_y [m]')
+    grid on
+
+    subplot(3,1,3)
+    plot(t_tr, err_theta_tr,'g','LineWidth',1.5)
+    ylabel('e_\theta [rad]')
+    xlabel('Time [s]')
+    grid on
+
+    exportgraphics(hErrTr, fullfile(figures_folder,'tracking_errors.png'),'Resolution',300);
+    close(hErrTr);
+end
+
+%% ---------------- REGULATION ERRORS ----------------
+if ~isempty(q_d_reg)
+
+    N_reg = size(q_reg,1);
+    t_reg_plot = linspace(0,35,N_reg)';
+    
+    % q_reg = [x y theta] nel posture_regulation_ctrl
+    err_x_reg = x_goal - q_reg(:,1);
+    err_y_reg = y_goal - q_reg(:,2);
+    err_theta_reg = wrapToPi(theta_goal - q_reg(:,3));
+
+    hErrReg = figure('Visible','off','Position',[100 100 900 700]);
+
+    subplot(3,1,1)
+    plot(t_reg_plot, err_x_reg,'b','LineWidth',1.5)
+    ylabel('e_x [m]')
+    title('Regulation Errors')
+    grid on
+
+    subplot(3,1,2)
+    plot(t_reg_plot, err_y_reg,'r','LineWidth',1.5)
+    ylabel('e_y [m]')
+    grid on
+
+    subplot(3,1,3)
+    plot(t_reg_plot, err_theta_reg,'g','LineWidth',1.5)
+    ylabel('e_\theta [rad]')
+    xlabel('Time [s]')
+    grid on
+
+    exportgraphics(hErrReg, fullfile(figures_folder,'regulation_errors.png'),'Resolution',300);
+    close(hErrReg);
+end
+
+disp('Error plots saved successfully.');
 
 %% ================================
 % SINGLE FINAL PLOT: MAZE + TRAJECTORIES
