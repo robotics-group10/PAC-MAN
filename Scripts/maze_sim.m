@@ -373,15 +373,15 @@ disp(['Final plot saved to: ', final_plot_filename]);
 
 % --- SETUP AUDIO (#1) and PLAY AUDIO (#1) (Optional, if you don't want it comment this section) ---
 
-death_file = 'pacman_end.mp3'; 
+death_file = 'sounds/pacman_end.mp3'; 
 y_death = []; 
 Fs_death = [];
 
 % --- Comment from here ---
 % try
 %     % Load intro and pacman wakawaka
-%     [y_intro, Fs_intro] = audioread('pacman_start.wav');
-%     [y_loop,  Fs_loop]  = audioread('pacman_theme.mp3');
+%     [y_intro, Fs_intro] = audioread('sounds/pacman_start.wav');
+%     [y_loop,  Fs_loop]  = audioread('sounds/pacman_theme.mp3');
 % 
 %     % Uniform channels (Mono vs Stereo) 
 %     if size(y_intro, 2) < size(y_loop, 2)
@@ -425,7 +425,7 @@ Fs_death = [];
 %     end
 % else
 %     disp(['File ' death_file ' non trovato.']);
-% end
+%end
 
 %% 
 % Create video directory and writer
