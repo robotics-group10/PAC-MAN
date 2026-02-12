@@ -123,14 +123,13 @@ disp(['Tracking end  = [', num2str([x_d(end), y_d(end), theta_d(end)]), ']'])
 %% ================================
 % TRACKING CONTROLLER SIMULATION
 %% ================================
-model_tracking = 'traj_track_state_error_linearization_ctrl';
+%model_tracking = 'traj_track_state_error_linearization_ctrl';
 %model_tracking = 'traj_track_state_error_nonlinear_ctlr';
-%model_tracking = 'traj_track_output_error_feedback_ctrl';
+model_tracking = 'traj_track_output_error_feedback_ctrl';
 
 if exist([model_tracking,'.slx'], 'file')
     load_system(model_tracking);
     set_param(model_tracking, 'SimulationCommand', 'update','StopTime', '35');
-    set_param(model_tracking,'SimulationCommand','update');
     simOut = sim(model_tracking,'ReturnWorkspaceOutputs','on');
     disp('Tracking simulation completed successfully.');
 else
@@ -140,8 +139,8 @@ end
 %% ================================
 % REGULATION (POST-TRAJECTORY)
 %% ================================
-model_reg = 'cartesian_regulation_ctrl';
-%model_reg = 'posture_regulation_ctrl';
+%model_reg = 'cartesian_regulation_ctrl';
+model_reg = 'posture_regulation_ctrl';
 
 if exist([model_reg,'.slx'],'file')
     load_system(model_reg);
