@@ -272,10 +272,6 @@ if ~isempty(q_d_tr)
 end
 
 % ---- REGULATION ----
-if ~isempty(q_d_reg)
-    h(end+1) = plot(q_d_reg(:,1)*scale, q_d_reg(:,2)*scale, 'c--', 'LineWidth',1.8);
-    labels{end+1} = 'Regulation desired';
-end
 h(end+1) = plot(q_reg(:,1)*scale, q_reg(:,2)*scale, 'w', 'LineWidth',2);
 labels{end+1} = 'Regulation actual';
 
@@ -290,6 +286,13 @@ labels{end+1} = 'Regulation goal';
 
 legend(h, labels, 'Location','best', 'TextColor', 'w', 'Color', 'k'); 
 grid off;
+%% Save Final Figure
+final_plot_filename = fullfile(figures_folder, 'maze_tracking_regulation.png');
+
+exportgraphics(gcf, final_plot_filename, ...
+    'Resolution', 300);   % High resolution (300 dpi)
+
+disp(['Final plot saved to: ', final_plot_filename]);
 
 %% Video Generation - Pacman Style
 %% ================================
