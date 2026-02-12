@@ -124,8 +124,8 @@ disp(['Tracking end  = [', num2str([x_d(end), y_d(end), theta_d(end)]), ']'])
 % TRACKING CONTROLLER SIMULATION
 %% ================================
 %model_tracking = 'traj_track_state_error_linearization_ctrl';
-%model_tracking = 'traj_track_state_error_nonlinear_ctlr';
-model_tracking = 'traj_track_output_error_feedback_ctrl';
+model_tracking = 'traj_track_state_error_nonlinear_ctlr';
+%model_tracking = 'traj_track_output_error_feedback_ctrl';
 
 if exist([model_tracking,'.slx'], 'file')
     load_system(model_tracking);

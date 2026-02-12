@@ -37,7 +37,7 @@ end
 most_frequent_params = mean(best_params_history, 1);
 
 fprintf(['\n', repmat('=', 1, 30), '\n']);
-fprintf('COMBINAZIONE OTTIMALE IDENTIFICATA: K1=%.2f, K2=%.2f, K3=%.2f\n', ...
+fprintf('OPTIMAL COMBINATION IDENTIFIED: K1=%.2f, K2=%.2f, K3=%.2f\n', ...
     most_frequent_params(1), most_frequent_params(2), most_frequent_params(3));
 fprintf(['\n', repmat('=', 1, 30), '\n']);
 
@@ -54,15 +54,15 @@ for k = 1:num_goals
     q_goal_simulink = [0, current_goal(1), current_goal(2); 100, current_goal(1), current_goal(2)];
     assignin('base', 'q_goal', q_goal_simulink);
     
-    % Esegui simulazione
+    % Simulation execution
     set_param(model_reg, 'SimulationCommand', 'update');
     simOut = sim(model_reg, 'ReturnWorkspaceOutputs', 'on', 'LoggingToFile', 'off');
     
-    % Calcola errore per questo goal
+    % Compute the error for this goal
     current_err = parking_cost(simOut, current_goal(1), current_goal(2));
     total_err = total_err + current_err;
     
-    % Plot e salvataggio finale
+    % Plot and save
     plot_and_save(simOut, sprintf('Traj_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
 
     % Extract timeseries objects
@@ -150,7 +150,7 @@ for k = 1:num_goals
 end
 
 avg_error = total_err / num_goals;
-fprintf('\n>>> ERRORE MEDIO FINALE CON PARAMETRI OTTIMI: %.4f <<<\n', avg_error);
+fprintf('\n>>> AVERAGE ERROR ON ALL THE TRAJECTORIES WITH OPTIMAL PARAMS: %.4f <<<\n', avg_error);
 
 best_gains = most_frequent_params;
 final_avg_error = avg_error;

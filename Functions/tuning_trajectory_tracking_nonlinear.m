@@ -58,23 +58,23 @@ for k = 1:length(trajectories)
     end
 end
 
-% Parametri ottimali medi sulle traiettorie
+% Optimal avg parameters on the trajetories
 most_frequent_params = mean(best_params_history, 1);
 fprintf(['\n', repmat('=', 1, 30), '\n']);
-fprintf('COMBINAZIONE OTTIMALE IDENTIFICATA: b=%.2f, xi=%.2f', ...
+fprintf('OPTIMAL COMBINATION IDENTIFIED: b=%.2f, xi=%.2f', ...
     most_frequent_params(1), most_frequent_params(2));
 fprintf(['\n', repmat('=', 1, 30), '\n']);
 
-% Imposta i parametri sul modello
+% Set params on the model
 param_names = {'b','xi'};
 for i = 1:2
     set_param([model_tracking '/' param_names{i}], 'Value', num2str(most_frequent_params(i)));
 end
 
-% Calcolo errore medio finale usando tracking_cost su tutte le traiettorie
+% Computation of the final average error using tracking_cost on all the trajectories
 total_err = 0;
 for k = 1:length(trajectories)
-    % Preparazione della traiettoria
+    % Trajectory preparation
     t = t_sim(:);
     xy = trajectories{k}(t);
     x_d = xy(:,1); y_d = xy(:,2);
@@ -93,10 +93,10 @@ for k = 1:length(trajectories)
     set_param(model_tracking, 'SimulationCommand', 'update', 'StopTime', '10');
     simOut = sim(model_tracking, 'ReturnWorkspaceOutputs','on');
 
-    % Calcola errore con tracking_cost
+    % Computation of the error with tracking_cost
     total_err = total_err + tracking_cost(simOut);
 
-    % Salva grafico per la traiettoria finale con parametri medi
+    % Save the plot for the final trajectory with avg params
     plot_and_save(simOut, sprintf('Trajectory_%d', k), figures_folder);
 
     % Extract timeseries objects
@@ -172,7 +172,7 @@ for k = 1:length(trajectories)
 end
 
 avg_error = total_err / length(trajectories);
-fprintf('\n>>> ERRORE MEDIO FINALE SU TUTTE LE TRAIETTORIE CON PARAMETRI OTTIMI: %.4f <<<\n', avg_error);
+fprintf('\n>>> AVERAGE ERROR ON ALL THE TRAJECTORIES WITH OPTIMAL PARAMS: %.4f <<<\n', avg_error);
 
 end
 
