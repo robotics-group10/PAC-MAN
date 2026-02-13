@@ -26,46 +26,43 @@ for k = 1:size(goals,1)
 
     fprintf('Goal [%.1f, %.1f] -> Kv=%.2f, Kw=%.2f | Err=%.4f\n', ...
         current_goal(1), current_goal(2), best_parking_params(1), best_parking_params(2), best_parking_err);
-    
-    % Re-run simulation with optimal parameters and plot
-    param_names_parking = {'kv','kw'};
-    for i = 1:length(best_parking_params)
-        set_param([model_reg '/' param_names_parking{i}], 'Value', num2str(best_parking_params(i)));
-    end
 end
 
 
+% Compute mean using the best parameters and print
 most_frequent_params = mean(best_params_history, 1);
-
 fprintf(['\n', repmat('=', 1, 30), '\n']);
-fprintf('COMBINAZIONE OTTIMALE IDENTIFICATA: Kv=%.2f, Kw=%.2f', ...
+fprintf('Average best paramenters: Kv=%.2f, Kw=%.2f', ...
     most_frequent_params(1), most_frequent_params(2));
 fprintf(['\n', repmat('=', 1, 30), '\n']);
 
-total_err = 0;
+% Set values of the parameters for simulation
 param_names = {'kv','kw',};
-
 for i = 1:2
     set_param([model_reg '/' param_names{i}], 'Value', num2str(most_frequent_params(i)));
 end
 
-
+% Re-run the simulations for each goal, using the average parameters
+total_err = 0;
 for k = 1:num_goals
+
+    % Create q_goal for "From Workspace"
     current_goal = goals(k,:);
     q_goal_simulink = [0, current_goal(1), current_goal(2); 100, current_goal(1), current_goal(2)];
     assignin('base', 'q_goal', q_goal_simulink);
     
-    % Esegui simulazione
+    % Run simulation
     set_param(model_reg, 'SimulationCommand', 'update');
     simOut = sim(model_reg, 'ReturnWorkspaceOutputs', 'on', 'LoggingToFile', 'off');
     
-    % Calcola errore per questo goal
+    % Evaluate cost function
     current_err = parking_cost(simOut, current_goal(1), current_goal(2));
     total_err = total_err + current_err;
     
-    % Plot e salvataggio finale
+    % Save trajectory to disk
     plot_and_save(simOut, sprintf('Traj_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
-
+    
+    % Plot evolution of error and velocities
     % Extract timeseries objects
     try
         q_ts  = simOut.logsout.getElement('q').Values;
@@ -140,9 +137,11 @@ for k = 1:num_goals
     close(hFig_ctrl);
 end
 
+% Compute avg error
 avg_error = total_err / num_goals;
-fprintf('\n>>> ERRORE MEDIO FINALE CON PARAMETRI OTTIMI: %.4f <<<\n', avg_error);
+fprintf('\n>>> Avg error with final parameters: %.4f <<<\n', avg_error);
 
+% Return values
 best_gains = most_frequent_params;
 final_avg_error = avg_error;
 

@@ -41,30 +41,30 @@ for k = 1:length(trajectories)
     [best_tracking_params, best_tracking_err, results_tracking] = ...
         grid_search(model_tracking, {'eps','a'}, {eps_vals, a_vals}, cost_tracking);
     
-
     best_params_history(k, :) = best_tracking_params;
 
     fprintf('Trajectory %d -> eps=%.2f, a=%.2f | RMS=%.4f\n', ...
         k, best_tracking_params(1), best_tracking_params(2), best_tracking_err);
 end
 
-% Parametri ottimali medi sulle traiettorie
+% Compute mean using the best parameters and print
 most_frequent_params = mean(best_params_history, 1);
 fprintf(['\n', repmat('=', 1, 30), '\n']);
-fprintf('COMBINAZIONE OTTIMALE IDENTIFICATA: eps=%.2f, a=%.2f', ...
+fprintf('Average best paramenters: eps=%.2f, a=%.2f', ...
     most_frequent_params(1), most_frequent_params(2));
 fprintf(['\n', repmat('=', 1, 30), '\n']);
 
-% Imposta i parametri sul modello
+% Set values of the parameters for simulation
 param_names = {'eps','a'};
 for i = 1:2
     set_param([model_tracking '/' param_names{i}], 'Value', num2str(most_frequent_params(i)));
 end
 
-% Calcolo errore medio finale usando tracking_cost su tutte le traiettorie
+% Re-run the simulations for each goal, using the average parameters 
 total_err = 0;
 for k = 1:length(trajectories)
-    % Preparazione della traiettoria
+
+    % Computing trajectory
     t = t_sim(:);
     xy = trajectories{k}(t);
     x_d = xy(:,1); y_d = xy(:,2);
@@ -83,12 +83,13 @@ for k = 1:length(trajectories)
     set_param(model_tracking, 'SimulationCommand', 'update', 'StopTime', '10');
     simOut = sim(model_tracking, 'ReturnWorkspaceOutputs','on');
 
-    % Calcola errore con tracking_cost
+    % Compute error
     total_err = total_err + tracking_cost(simOut);
 
-    % Salva grafico per la traiettoria finale con parametri medi
+    % Plot and save trajectory to disk
     plot_and_save(simOut, sprintf('Trajectory_%d', k), figures_folder);
 
+    % Plot evolution of error and velocities
     % Extract timeseries objects
     try
         q_ts  = simOut.logsout.getElement('q').Values;
@@ -161,8 +162,9 @@ for k = 1:length(trajectories)
     close(hFig_ctrl);
 end
 
+% Avg error
 avg_error = total_err / length(trajectories);
-fprintf('\n>>> ERRORE MEDIO FINALE SU TUTTE LE TRAIETTORIE CON PARAMETRI OTTIMI: %.4f <<<\n', avg_error);
+fprintf('\n>>> Avg error with final parameters: %.4f <<<\n', avg_error);
 
 end
 
