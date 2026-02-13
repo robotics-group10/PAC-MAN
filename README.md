@@ -1,5 +1,9 @@
 # PAC-MAN: Robotics and Control 2 Project
 
+<p align="center">
+  <img width="300" height="300" alt="logo_pacman" src="https://github.com/user-attachments/assets/9e5a2b53-99ee-4cc5-824d-422de4e2803c" />
+</p>
+
 This repository contains the project implementation for the **Robotics & Control 2 (R&C2)** course at the **University of Padova**, Department of Information Engineering. 
 
 The project was developed for the Master's Degree in Control Systems Engineering (A.Y. 2025-26) under the guidance of Prof. **Angelo Cenedese**.
