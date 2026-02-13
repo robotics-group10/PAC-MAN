@@ -138,7 +138,7 @@ switch tuning_id
     %% =========================================================
     case 2
         % PARAMETERS
-        % Best: b=23.79, xi=0.79, mean_err_optimal= 0.0138
+        % Best: b=23.79, xi=0.76, mean_err_optimal= 0.0151
 
         small_xi = 0.1;
         big_xi = 0.9;
