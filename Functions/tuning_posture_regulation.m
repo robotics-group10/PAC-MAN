@@ -52,15 +52,15 @@ for k = 1:num_goals
     q_goal_simulink = [0, current_goal(1), current_goal(2); 100, current_goal(1), current_goal(2)];
     assignin('base', 'q_goal', q_goal_simulink);
     
-    % Run simulation
+    % Simulation execution
     set_param(model_reg, 'SimulationCommand', 'update');
     simOut = sim(model_reg, 'ReturnWorkspaceOutputs', 'on', 'LoggingToFile', 'off');
     
-    % Evaluate cost function
+    % Compute the error for this goal
     current_err = parking_cost(simOut, current_goal(1), current_goal(2));
     total_err = total_err + current_err;
     
-    % Save trajectory to disk
+    % Plot and save
     plot_and_save(simOut, sprintf('Traj_Goal_%.1f_%.1f', current_goal(1), current_goal(2)), figures_folder, current_goal);
 
     % Plot evolution of error and velocities
@@ -150,7 +150,7 @@ end
 
 % Avg error
 avg_error = total_err / num_goals;
-fprintf('\n>>> Avg error with final parameters: %.4f <<<\n', avg_error);
+fprintf('\n>>> AVERAGE ERROR ON ALL THE TRAJECTORIES WITH OPTIMAL PARAMS: %.4f <<<\n', avg_error);
 
 % Return values
 best_gains = most_frequent_params;

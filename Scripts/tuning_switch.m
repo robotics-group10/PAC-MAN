@@ -1,18 +1,18 @@
 %% SELECT TUNING TO RUN
-% 1 = Tracking linearizzato
-% 2 = Tracking non lineare
-% 3 = Tracking output error feedback
+% 1 = Trajectory tracking state error linearization controller
+% 2 = Trajectory tracking state error nonlinear controller
+% 3 = Trajectory tracking output error feedback controller
 % 4 = Cartesian regulation
 % 5 = Posture regulation
 
 prompt = "Legend: \n" + ...
-    " 1 = Tracking linearizzato \n" + ...
-    " 2 = Tracking non lineare \n" + ...
-    " 3 = Tracking output error feedback \n" + ...
+    " 1 = Trajectory tracking state error linearization controller \n" + ...
+    " 2 = Trajectory tracking state error nonlinear controller \n" + ...
+    " 3 = Trajectory tracking output error feedback controller \n" + ...
     " 4 = Cartesian regulation \n" + ...
     " 5 = Posture regulation \n " + ...
     "\nEnter the value for the tuning of a controller (1-5): ";
-tuning_id = input(prompt);   % <<< scegli qui quale tuning eseguire
+tuning_id = input(prompt);   % <<< Chose here what tuning you want perform
 
 if tuning_id < 1 || tuning_id > 5
     error('Tuning_id must be in interval (1-5)!');
@@ -69,10 +69,10 @@ t_sim = linspace(0,10,100000);
 trajectories = {
     @(t) [2*cos(t), 2*sin(t)];   % Circle
     @(t) [t, sin(t)];            % X-linear sine wave
-    @(t) [cos(t), t];            % Y-linear sine wave
-    @(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
-    @(t) [t, 2*(t>5)];           % PureStep
-    @(t) squareTrajectory(t, 2); % Square
+    %@(t) [cos(t), t];            % Y-linear sine wave
+    %@(t) [ t, 2*tanh(t-5) ];     % Step/Lane change trajectory
+    %@(t) [t, 2*(t>5)];           % PureStep
+    %@(t) squareTrajectory(t, 2); % Square
 };
 function p = squareTrajectory(t, L)
 

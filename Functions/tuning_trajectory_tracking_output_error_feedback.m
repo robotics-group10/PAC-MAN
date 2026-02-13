@@ -83,14 +83,14 @@ for k = 1:length(trajectories)
     q0 = [x_d(1); y_d(1); theta_d(1)];
     assignin('base','q0',q0);
 
-    % Re run simulation on trajectory k with medium params
+    % Simulation with avg params
     set_param(model_tracking, 'SimulationCommand', 'update', 'StopTime', '10');
     simOut = sim(model_tracking, 'ReturnWorkspaceOutputs','on');
 
-    % Compute error
+    % Computation of the error with tracking_cost
     total_err = total_err + tracking_cost(simOut);
 
-    % Plot and save trajectory to disk
+    % Save the plot for the final trajectory with avg params
     plot_and_save(simOut, sprintf('Trajectory_%d_FinalTracking', k), figures_folder);
 
     % Plot evolution of error and velocities
@@ -168,6 +168,6 @@ end
 
 % Avg error
 avg_error = total_err / length(trajectories);
-fprintf('\n>>> Avg error with final parameters: %.4f <<<\n', avg_error);
+fprintf('\n>>> AVERAGE ERROR ON ALL THE TRAJECTORIES WITH OPTIMAL PARAMS: %.4f <<<\n', avg_error);
 
 end
