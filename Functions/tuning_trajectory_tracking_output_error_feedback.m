@@ -29,6 +29,7 @@ for k = 1:length(trajectories)
 
     % Compute desired orientation
     theta_d = atan2(dy + 1e-12, dx + 1e-12);
+    theta_d = unwrap(theta_d);
     
     % Create desired trajectory for Simulink "From Workspace"
     q_d_new = [t, x_d, y_d, theta_d];
@@ -78,6 +79,7 @@ for k = 1:length(trajectories)
     dx = smoothdata(dx,'movmean',5);
     dy = smoothdata(dy,'movmean',5);
     theta_d = atan2(dy + 1e-12, dx + 1e-12);
+    theta_d = unwrap(theta_d);
     q_d_new = [t, x_d, y_d, theta_d];
     assignin('base','q_d_new', q_d_new);
     q0 = [x_d(1); y_d(1); theta_d(1)];
